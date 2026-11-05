@@ -1,1 +1,25 @@
-[]
+{
+  "name": "2048 — PWA",
+  "short_name": "2048",
+  "description": "Классическая игра 2048 с разными режимами и темами",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a1a",
+  "theme_color": "#edc22e",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%23edc22e%22/><text x=%2296%22 y=%22130%22 font-size=%22100%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22%23fff%22>2048</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%2280%22 fill=%22%23edc22e%22/><text x=%22256%22 y=%22350%22 font-size=%22270%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22%23fff%22>2048</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
