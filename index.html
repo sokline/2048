@@ -209,14 +209,15 @@
   button:active{transform:scale(.96)}
   button:disabled{opacity:.4; cursor:not-allowed}
 
+  /* ИСПРАВЛЕНИЕ: board-wrap теперь квадратный через JS */
   .board-wrap{
     position:relative;
-    width:100%; max-width:480px;
-    flex:1;
-    max-height:calc(100vh - 220px);
-    aspect-ratio:1/1;
+    width:100%;
+    max-width:480px;
+    flex-shrink:0;
     touch-action:none;
     -webkit-touch-callout:none;
+    /* Убираем aspect-ratio и max-height, размер задаётся через JS */
   }
   .board{
     position:absolute;
@@ -231,7 +232,6 @@
     border-radius:4px;
   }
   
-  /* ИСПРАВЛЕНИЕ: tiles теперь внутри board с одинаковым padding */
   .tiles{
     position:absolute;
     inset:0;
@@ -419,11 +419,6 @@
     .score-box .value{font-size:1.1rem}
     button{padding:9px 10px; font-size:.85rem}
     .splash-logo{font-size:4.5rem}
-    .board-wrap{max-height:calc(100vh - 200px)}
-  }
-
-  @media (max-height:600px){
-    .board-wrap{max-height:calc(100vh - 180px)}
   }
 </style>
 </head>
@@ -720,7 +715,8 @@
     saveGame();
   }
 
-  // ===== Рендер (ИСПРАВЛЕННЫЙ) =====
+  // ===== Рендер =====
+  const boardWrap = document.getElementById('boardWrap');
   const boardEl = document.getElementById('board');
   const tilesEl = document.getElementById('tiles');
   const scoreEl = document.getElementById('score');
@@ -728,11 +724,34 @@
   const modeEl = document.getElementById('modeLabel');
   const playerEl = document.getElementById('playerName');
 
+  function calculateBoardSize(){
+    // Вычисляем доступное пространство
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const bodyPadding = window.innerWidth <= 480 ? 16 : 24; // padding body * 2
+    const headerHeight = 80; // header + scores
+    const controlsHeight = 50; // кнопки
+    const footerHeight = 40; // footer
+    const margins = 40; // отступы между элементами
+    
+    const availableWidth = viewportWidth - bodyPadding - 20; // 20px запас
+    const availableHeight = viewportHeight - headerHeight - controlsHeight - footerHeight - margins - bodyPadding;
+    
+    // Берём минимум для квадрата
+    const size = Math.min(availableWidth, availableHeight, 480);
+    return Math.max(200, size); // минимум 200px
+  }
+
   function render(){
     const n = state.size;
     const isMobile = window.innerWidth <= 480;
     const gap = isMobile ? 6 : 8;
     const padding = isMobile ? 6 : 8;
+
+    // Вычисляем квадратный размер
+    const boardSize = calculateBoardSize();
+    boardWrap.style.width = boardSize + 'px';
+    boardWrap.style.height = boardSize + 'px';
 
     // Настраиваем board
     const gridTemplate = `repeat(${n}, 1fr)`;
@@ -741,7 +760,7 @@
     boardEl.style.padding = padding + 'px';
     boardEl.style.gap = gap + 'px';
 
-    // Настраиваем tiles (те же параметры!)
+    // Настраиваем tiles
     tilesEl.style.gridTemplateColumns = gridTemplate;
     tilesEl.style.gridTemplateRows = gridTemplate;
     tilesEl.style.padding = padding + 'px';
@@ -776,7 +795,7 @@
         t.style.gridRow = `${rowStart} / ${rowStart + 1}`;
         t.style.gridColumn = `${colStart} / ${colStart + 1}`;
         
-        const fontSize = isMobile ? 24 : 32;
+        const fontSize = Math.max(16, Math.min(boardSize / n * 0.4, 48));
         t.style.fontSize = fontSize + 'px';
         
         tilesEl.appendChild(t);
@@ -878,7 +897,6 @@
   });
 
   // ===== Свайпы =====
-  const boardWrap = document.getElementById('boardWrap');
   let tx=0, ty=0, touchStartTime=0;
 
   boardWrap.addEventListener('touchstart', (e)=>{
