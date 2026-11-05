@@ -2,8 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>2048 — PWA</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23edc22e%22/><text x=%2250%22 y=%2268%22 font-size=%2255%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22%23fff%22>2048</text></svg>">
@@ -40,32 +42,148 @@
   }
 
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;overflow-x:hidden}
+  html,body{
+    height:100%;
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     background:var(--bg); color:var(--text);
     display:flex; flex-direction:column; align-items:center;
     padding:12px; min-height:100vh; transition:background .3s;
     user-select:none;
+    position:fixed;
+    width:100%;
+    top:0; left:0;
   }
 
+  /* ===== SPLASH SCREEN ===== */
   #splash{
     position:fixed; inset:0; z-index:1000;
     background:var(--bg);
-    display:flex; align-items:center; justify-content:center;
-    transition:opacity .5s;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    transition:opacity .8s ease;
   }
   #splash.hide{opacity:0; pointer-events:none}
-  .splash-content{text-align:center; animation:fadeInUp .8s ease-out}
-  .splash-logo{font-size:4rem; font-weight:800; color:var(--accent); animation:pulse 1.5s ease-in-out infinite}
-  .splash-text{margin-top:16px; font-size:1.2rem; opacity:.7}
-  @keyframes fadeInUp{from{opacity:0; transform:translateY(30px)} to{opacity:1; transform:translateY(0)}}
-  @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.05)}}
+  .splash-content{
+    text-align:center;
+    width:100%;
+    max-width:400px;
+    padding:20px;
+  }
+  .splash-logo{
+    font-size:6rem;
+    font-weight:900;
+    color:var(--accent);
+    letter-spacing:-3px;
+    opacity:0;
+    animation:logoIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    text-shadow:0 4px 20px rgba(237,194,46,0.4);
+  }
+  @keyframes logoIn{
+    0%{opacity:0; transform:scale(0.3) rotate(-10deg)}
+    60%{opacity:1; transform:scale(1.1) rotate(3deg)}
+    100%{opacity:1; transform:scale(1) rotate(0)}
+  }
+  .splash-divider{
+    width:60%;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin:20px auto;
+    opacity:0;
+    animation:fadeIn 0.6s ease 0.8s forwards;
+  }
+  .splash-dev{
+    font-size:1.1rem;
+    font-weight:600;
+    color:var(--text);
+    opacity:0;
+    animation:fadeIn 0.8s ease 1.2s forwards;
+    letter-spacing:1px;
+  }
+  .splash-year{
+    font-size:1.5rem;
+    font-weight:800;
+    color:var(--accent);
+    margin-top:8px;
+    opacity:0;
+    animation:fadeIn 0.8s ease 1.6s forwards;
+  }
+  .splash-version{
+    font-size:0.9rem;
+    color:var(--text);
+    opacity:0;
+    margin-top:12px;
+    animation:fadeIn 0.8s ease 2s forwards;
+    background:var(--cell);
+    padding:6px 16px;
+    border-radius:20px;
+    display:inline-block;
+  }
+  .splash-wrapper{
+    opacity:0;
+    animation:fadeIn 0.8s ease 2s forwards;
+  }
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(10px)}
+    to{opacity:1; transform:translateY(0)}
+  }
+  .progress-wrap{
+    margin-top:30px;
+    width:80%;
+    height:4px;
+    background:var(--cell);
+    border-radius:2px;
+    overflow:hidden;
+    opacity:0;
+    animation:fadeIn 0.6s ease 2.4s forwards;
+  }
+  .progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--accent), #f59563);
+    border-radius:2px;
+    transition:width 0.1s linear;
+  }
+  .splash-hint{
+    margin-top:16px;
+    font-size:0.85rem;
+    opacity:0;
+    color:var(--text);
+    animation:fadeIn 0.6s ease 2.6s forwards, pulse 2s ease-in-out 3s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:0.5}
+    50%{opacity:1}
+  }
+  .splash-particles{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .particle{
+    position:absolute;
+    width:8px; height:8px;
+    background:var(--accent);
+    border-radius:50%;
+    opacity:0;
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%{opacity:0; transform:translateY(100vh) scale(0)}
+    50%{opacity:0.6}
+    100%{opacity:0; transform:translateY(-20vh) scale(1)}
+  }
 
+  /* ===== HEADER — фиксированный ===== */
   header{
     width:100%; max-width:480px;
     display:flex; justify-content:space-between; align-items:center;
     margin-bottom:12px; flex-wrap:wrap; gap:8px;
+    flex-shrink:0;
   }
   h1{font-size:2.2rem; color:var(--accent); font-weight:800; letter-spacing:-1px}
   .scores{display:flex; gap:8px}
@@ -76,7 +194,12 @@
   .score-box .label{font-size:.7rem; text-transform:uppercase; opacity:.7}
   .score-box .value{font-size:1.3rem; font-weight:700}
 
-  .controls{width:100%; max-width:480px; display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px}
+  .controls{
+    width:100%; max-width:480px;
+    display:flex; gap:6px; flex-wrap:wrap;
+    margin-bottom:12px;
+    flex-shrink:0;
+  }
   button{
     background:var(--btn); color:var(--text-light);
     border:none; padding:10px 14px; border-radius:6px;
@@ -88,7 +211,16 @@
   button:active{transform:scale(.96)}
   button:disabled{opacity:.4; cursor:not-allowed}
 
-  .board-wrap{position:relative; width:100%; max-width:480px; aspect-ratio:1/1}
+  /* ===== BOARD — занимает оставшееся место ===== */
+  .board-wrap{
+    position:relative;
+    width:100%; max-width:480px;
+    flex:1;
+    max-height:calc(100vh - 220px);
+    aspect-ratio:1/1;
+    touch-action:none;
+    -webkit-touch-callout:none;
+  }
   .board{
     position:absolute; inset:0;
     background:var(--board); border-radius:8px;
@@ -214,26 +346,47 @@
   .lb-actions{display:flex; gap:8px; margin-top:12px}
   .lb-actions button{font-size:.85rem; padding:8px 12px}
 
-  footer{margin-top:16px; font-size:.75rem; opacity:.6; text-align:center}
+  footer{
+    margin-top:12px; font-size:.75rem; opacity:.6;
+    text-align:center; flex-shrink:0;
+  }
 
   @media (max-width:480px){
+    body{padding:8px}
     h1{font-size:1.8rem}
     .score-box{padding:6px 10px; min-width:60px}
     .score-box .value{font-size:1.1rem}
     button{padding:9px 10px; font-size:.85rem}
-    .splash-logo{font-size:3rem}
+    .splash-logo{font-size:4.5rem}
+    .board-wrap{max-height:calc(100vh - 200px)}
+  }
+
+  @media (max-height:600px){
+    .board-wrap{max-height:calc(100vh - 180px)}
   }
 </style>
 </head>
 <body>
 
+<!-- ===== SPLASH SCREEN ===== -->
 <div id="splash">
+  <div class="splash-particles" id="particles"></div>
   <div class="splash-content">
     <div class="splash-logo">2048</div>
-    <div class="splash-text">Загрузка...</div>
+    <div class="splash-divider"></div>
+    <div class="splash-wrapper">
+      <div class="splash-dev">Разработчик</div>
+      <div class="splash-year">SKLN 2026</div>
+      <div class="splash-version">версия 1.0</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="splash-hint">Загрузка игры...</div>
   </div>
 </div>
 
+<!-- ===== HEADER ===== -->
 <header>
   <h1>2048</h1>
   <div class="scores">
@@ -249,7 +402,7 @@
   <button id="btnLeader">🏆 Рейтинг</button>
 </div>
 
-<div class="board-wrap">
+<div class="board-wrap" id="boardWrap">
   <div class="board" id="board"></div>
   <div class="tiles" id="tiles"></div>
   <div class="overlay" id="overlay">
@@ -260,6 +413,7 @@
 
 <footer>Игрок: <span id="playerName">гость</span> · Режим: <span id="modeLabel">4×4</span></footer>
 
+<!-- ===== SETTINGS MODAL ===== -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
     <button class="close-x" data-close="settingsModal">×</button>
@@ -292,6 +446,7 @@
   </div>
 </div>
 
+<!-- ===== LEADER MODAL ===== -->
 <div class="modal-bg" id="leaderModal">
   <div class="modal">
     <button class="close-x" data-close="leaderModal">×</button>
@@ -507,7 +662,7 @@
     saveGame();
   }
 
-  // ===== Рендер (ИСПРАВЛЕННЫЙ) =====
+  // ===== Рендер =====
   const boardEl = document.getElementById('board');
   const tilesEl = document.getElementById('tiles');
   const scoreEl = document.getElementById('score');
@@ -532,7 +687,6 @@
       boardEl.appendChild(d);
     }
 
-    // Вычисляем размеры в пикселях
     const boardRect = boardEl.getBoundingClientRect();
     const containerSize = boardRect.width - padding * 2;
     const cellSize = (containerSize - gap * (n - 1)) / n;
@@ -654,16 +808,40 @@
     if(e.key==='z' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
   });
 
-  let tx=0, ty=0;
-  document.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; initAudio(); }, {passive:true});
-  document.addEventListener('touchend', e=>{
+  // ===== Свайпы с блокировкой скролла =====
+  const boardWrap = document.getElementById('boardWrap');
+  let tx=0, ty=0, touchStartTime=0;
+
+  boardWrap.addEventListener('touchstart', (e)=>{
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+    touchStartTime = Date.now();
+    initAudio();
+  }, {passive:true});
+
+  boardWrap.addEventListener('touchmove', (e)=>{
+    // Блокируем скролл страницы при свайпе по доске
+    e.preventDefault();
+  }, {passive:false});
+
+  boardWrap.addEventListener('touchend', (e)=>{
     const dx = e.changedTouches[0].clientX - tx;
     const dy = e.changedTouches[0].clientY - ty;
+    const dt = Date.now() - touchStartTime;
     if(Math.abs(dx)<30 && Math.abs(dy)<30) return;
+    if(dt > 1000) return; // слишком долгий тап
     const dir = Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
     if(move(dir)){ render(); saveGame(); }
-  });
+  }, {passive:true});
 
+  // Предотвращение скролла на всём документе при свайпе
+  document.addEventListener('touchmove', (e)=>{
+    if(e.target.closest('.board-wrap')){
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  // Кнопки
   document.getElementById('btnNew').onclick = ()=>{
     initAudio();
     if(state.score>0 && !confirm('Начать новую игру?')) return;
@@ -760,6 +938,44 @@
     if(document.visibilityState==='hidden') saveGame();
   });
 
+  // ===== SPLASH SCREEN — 10 секунд =====
+  function createParticles(){
+    const container = document.getElementById('particles');
+    for(let i=0;i<15;i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random()*100 + '%';
+      p.style.animationDelay = (Math.random()*3) + 's';
+      p.style.animationDuration = (2 + Math.random()*2) + 's';
+      p.style.width = p.style.height = (4 + Math.random()*8) + 'px';
+      container.appendChild(p);
+    }
+  }
+
+  function runSplash(){
+    createParticles();
+    const bar = document.getElementById('progressBar');
+    const duration = 10000; // 10 секунд
+    const startTime = Date.now();
+
+    const interval = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / duration) * 100);
+      bar.style.width = progress + '%';
+
+      if(elapsed >= duration){
+        clearInterval(interval);
+        // Плавное скрытие
+        const splash = document.getElementById('splash');
+        splash.classList.add('hide');
+        setTimeout(()=>{
+          splash.style.display = 'none';
+        }, 800);
+      }
+    }, 50);
+  }
+
+  // ===== Инициализация =====
   loadSettings();
   applyTheme(settings.theme);
   loadGame();
@@ -770,10 +986,8 @@
     render();
   }
 
-  setTimeout(()=>{
-    document.getElementById('splash').classList.add('hide');
-    setTimeout(()=>{ document.getElementById('splash').style.display='none'; }, 500);
-  }, 800);
+  // Запускаем splash на 10 секунд
+  runSplash();
 
   let resizeTimer;
   window.addEventListener('resize', ()=>{
