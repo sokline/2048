@@ -219,28 +219,36 @@
     -webkit-touch-callout:none;
   }
   .board{
-    position:absolute; inset:0;
-    background:var(--board); border-radius:8px;
+    position:absolute;
+    inset:0;
+    background:var(--board);
+    border-radius:8px;
     display:grid;
-    padding:8px;
-    gap:8px;
     transition:background .3s;
   }
-  .cell{background:var(--cell); border-radius:4px}
+  .cell{
+    background:var(--cell);
+    border-radius:4px;
+  }
   
-  /* Плитки теперь тоже через grid */
+  /* ИСПРАВЛЕНИЕ: tiles теперь внутри board с одинаковым padding */
   .tiles{
     position:absolute;
-    inset:8px;
+    inset:0;
     display:grid;
     pointer-events:none;
   }
   .tile{
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    border-radius:4px;
     transition:transform .2s cubic-bezier(0.4,0,0.2,1);
-    background:#eee4da; color:var(--text);
-    width:100%; height:100%;
+    background:#eee4da;
+    color:var(--text);
+    width:100%;
+    height:100%;
   }
   .tile.new{animation:pop .25s cubic-bezier(0.4,0,0.2,1)}
   .tile.merged{animation:merge .25s cubic-bezier(0.4,0,0.2,1); z-index:2}
@@ -263,49 +271,77 @@
   .tsuper{background:#000;color:#fff}
 
   .overlay{
-    position:absolute; inset:0;
+    position:absolute;
+    inset:0;
     background:var(--overlay);
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    border-radius:8px; z-index:10;
-    opacity:0; pointer-events:none; transition:opacity .3s;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    z-index:10;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s;
   }
   .overlay.show{opacity:1; pointer-events:auto}
   .overlay h2{font-size:2rem; margin-bottom:16px; color:var(--text)}
   .overlay button{flex:0 0 auto; width:auto; padding:12px 24px}
 
   .modal-bg{
-    position:fixed; inset:0; background:rgba(0,0,0,.6);
-    display:none; align-items:center; justify-content:center;
-    z-index:100; padding:16px;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:16px;
   }
   .modal-bg.show{display:flex}
   .modal{
-    background:var(--bg); color:var(--text);
-    border-radius:10px; padding:20px;
-    width:100%; max-width:420px; max-height:90vh;
-    overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3);
+    background:var(--bg);
+    color:var(--text);
+    border-radius:10px;
+    padding:20px;
+    width:100%;
+    max-width:420px;
+    max-height:90vh;
+    overflow-y:auto;
+    box-shadow:0 10px 40px rgba(0,0,0,.3);
   }
   .modal h3{margin-bottom:14px; font-size:1.4rem}
   .modal label{display:block; margin:10px 0 4px; font-size:.9rem; font-weight:600}
   .modal input, .modal select{
-    width:100%; padding:10px; border-radius:6px;
-    border:1px solid var(--cell); background:var(--cell);
-    color:var(--text); font-size:1rem;
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid var(--cell);
+    background:var(--cell);
+    color:var(--text);
+    font-size:1rem;
   }
   .modal .row{display:flex; gap:8px; margin-top:16px}
   .modal .row button{flex:1}
   .close-x{
-    float:right; background:none; color:var(--text);
-    font-size:1.5rem; padding:0 8px; flex:0 0 auto; min-width:0;
+    float:right;
+    background:none;
+    color:var(--text);
+    font-size:1.5rem;
+    padding:0 8px;
+    flex:0 0 auto;
+    min-width:0;
   }
   .close-x:hover{background:none}
 
   .theme-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px}
   .theme-btn{
-    padding:14px 8px; border-radius:6px;
-    border:2px solid transparent; cursor:pointer;
-    font-weight:600; font-size:.85rem;
+    padding:14px 8px;
+    border-radius:6px;
+    border:2px solid transparent;
+    cursor:pointer;
+    font-weight:600;
+    font-size:.85rem;
   }
   .theme-btn.active{border-color:var(--accent)}
   .theme-btn[data-t="light"]{background:#f5f0e8; color:#776e65}
@@ -316,30 +352,49 @@
   .theme-btn[data-t="forest"]{background:#1b2e1f; color:#d4e8d0}
 
   .volume-control{
-    display:flex; align-items:center; gap:10px;
-    margin-top:10px; padding:10px;
-    background:var(--cell); border-radius:6px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+    padding:10px;
+    background:var(--cell);
+    border-radius:6px;
   }
   .volume-control input[type="range"]{
-    flex:1; height:6px; border-radius:3px;
-    background:var(--board); outline:none;
+    flex:1;
+    height:6px;
+    border-radius:3px;
+    background:var(--board);
+    outline:none;
     -webkit-appearance:none;
   }
   .volume-control input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:18px; height:18px;
-    border-radius:50%; background:var(--accent); cursor:pointer;
+    -webkit-appearance:none;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
   }
   .volume-control input[type="range"]::-moz-range-thumb{
-    width:18px; height:18px; border-radius:50%;
-    background:var(--accent); cursor:pointer; border:none;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:none;
   }
   .volume-icon{font-size:1.3rem; min-width:30px}
 
   .leaderboard{margin-top:10px}
   .lb-row{
-    display:flex; justify-content:space-between;
-    padding:10px 12px; background:var(--cell);
-    border-radius:6px; margin-bottom:6px; align-items:center;
+    display:flex;
+    justify-content:space-between;
+    padding:10px 12px;
+    background:var(--cell);
+    border-radius:6px;
+    margin-bottom:6px;
+    align-items:center;
   }
   .lb-row .rank{font-weight:700; color:var(--accent); min-width:30px}
   .lb-row .name{flex:1; margin-left:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -350,8 +405,11 @@
   .lb-actions button{font-size:.85rem; padding:8px 12px}
 
   footer{
-    margin-top:12px; font-size:.75rem; opacity:.6;
-    text-align:center; flex-shrink:0;
+    margin-top:12px;
+    font-size:.75rem;
+    opacity:.6;
+    text-align:center;
+    flex-shrink:0;
   }
 
   @media (max-width:480px){
@@ -362,8 +420,6 @@
     button{padding:9px 10px; font-size:.85rem}
     .splash-logo{font-size:4.5rem}
     .board-wrap{max-height:calc(100vh - 200px)}
-    .board{padding:6px; gap:6px}
-    .tiles{inset:6px}
   }
 
   @media (max-height:600px){
@@ -401,13 +457,14 @@
 <div class="controls">
   <button id="btnNew">Новая</button>
   <button id="btnUndo">↶ Ход назад</button>
-  <button id="btnSettings"> Настройки</button>
+  <button id="btnSettings">⚙ Настройки</button>
   <button id="btnLeader">🏆 Рейтинг</button>
 </div>
 
 <div class="board-wrap" id="boardWrap">
-  <div class="board" id="board"></div>
-  <div class="tiles" id="tiles"></div>
+  <div class="board" id="board">
+    <div class="tiles" id="tiles"></div>
+  </div>
   <div class="overlay" id="overlay">
     <h2 id="overlayText">Игра окончена!</h2>
     <button id="overlayBtn">Новая игра</button>
@@ -613,7 +670,7 @@
           if(state.grid[r][c]>=target){
             state.won=true;
             playWinSound();
-            showOverlay('Победа! ','Продолжить');
+            showOverlay('Победа! 🎉','Продолжить');
             return true;
           }
     }
@@ -663,7 +720,7 @@
     saveGame();
   }
 
-  // ===== Рендер (ИСПРАВЛЕННЫЙ — ЧЕРЕЗ GRID) =====
+  // ===== Рендер (ИСПРАВЛЕННЫЙ) =====
   const boardEl = document.getElementById('board');
   const tilesEl = document.getElementById('tiles');
   const scoreEl = document.getElementById('score');
@@ -677,22 +734,28 @@
     const gap = isMobile ? 6 : 8;
     const padding = isMobile ? 6 : 8;
 
-    // Настраиваем обе сетки одинаково
+    // Настраиваем board
     const gridTemplate = `repeat(${n}, 1fr)`;
     boardEl.style.gridTemplateColumns = gridTemplate;
     boardEl.style.gridTemplateRows = gridTemplate;
     boardEl.style.padding = padding + 'px';
     boardEl.style.gap = gap + 'px';
 
+    // Настраиваем tiles (те же параметры!)
     tilesEl.style.gridTemplateColumns = gridTemplate;
     tilesEl.style.gridTemplateRows = gridTemplate;
+    tilesEl.style.padding = padding + 'px';
+    tilesEl.style.gap = gap + 'px';
 
-    // Очищаем доску
-    boardEl.innerHTML = '';
+    // Очищаем board (кроме tiles)
+    const cells = boardEl.querySelectorAll('.cell');
+    cells.forEach(c => c.remove());
+    
+    // Создаём ячейки
     for(let i=0;i<n*n;i++){
       const d = document.createElement('div');
       d.className = 'cell';
-      boardEl.appendChild(d);
+      boardEl.insertBefore(d, tilesEl);
     }
 
     // Очищаем плитки
@@ -708,14 +771,12 @@
         t.className = 'tile' + tileClass(v);
         t.textContent = v;
         
-        // Позиционируем через grid-area
         const rowStart = r + 1;
         const colStart = c + 1;
         t.style.gridRow = `${rowStart} / ${rowStart + 1}`;
         t.style.gridColumn = `${colStart} / ${colStart + 1}`;
         
-        // Размер шрифта
-        const fontSize = isMobile ? 28 : 36;
+        const fontSize = isMobile ? 24 : 32;
         t.style.fontSize = fontSize + 'px';
         
         tilesEl.appendChild(t);
@@ -907,10 +968,10 @@
     if(val > 0) playClickSound();
   };
   function updateVolumeIcon(val){
-    if(val===0) volumeIcon.textContent='';
+    if(val===0) volumeIcon.textContent='🔇';
     else if(val<33) volumeIcon.textContent='🔈';
-    else if(val<66) volumeIcon.textContent='';
-    else volumeIcon.textContent='';
+    else if(val<66) volumeIcon.textContent='🔉';
+    else volumeIcon.textContent='🔊';
   }
 
   function currentSelectedTheme(){
