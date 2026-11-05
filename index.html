@@ -58,7 +58,6 @@
     top:0; left:0;
   }
 
-  /* ===== SPLASH SCREEN ===== */
   #splash{
     position:fixed; inset:0; z-index:1000;
     background:var(--bg);
@@ -178,7 +177,6 @@
     100%{opacity:0; transform:translateY(-20vh) scale(1)}
   }
 
-  /* ===== HEADER — фиксированный ===== */
   header{
     width:100%; max-width:480px;
     display:flex; justify-content:space-between; align-items:center;
@@ -211,7 +209,6 @@
   button:active{transform:scale(.96)}
   button:disabled{opacity:.4; cursor:not-allowed}
 
-  /* ===== BOARD — занимает оставшееся место ===== */
   .board-wrap{
     position:relative;
     width:100%; max-width:480px;
@@ -225,19 +222,25 @@
     position:absolute; inset:0;
     background:var(--board); border-radius:8px;
     display:grid;
+    padding:8px;
+    gap:8px;
     transition:background .3s;
   }
   .cell{background:var(--cell); border-radius:4px}
-  .tiles{position:absolute; pointer-events:none}
-  .tile{
+  
+  /* Плитки теперь тоже через grid */
+  .tiles{
     position:absolute;
+    inset:8px;
+    display:grid;
+    pointer-events:none;
+  }
+  .tile{
     display:flex; align-items:center; justify-content:center;
     font-weight:800; border-radius:4px;
-    transition:left .15s cubic-bezier(0.4,0,0.2,1),
-               top .15s cubic-bezier(0.4,0,0.2,1),
-               transform .2s cubic-bezier(0.4,0,0.2,1);
+    transition:transform .2s cubic-bezier(0.4,0,0.2,1);
     background:#eee4da; color:var(--text);
-    will-change: left, top;
+    width:100%; height:100%;
   }
   .tile.new{animation:pop .25s cubic-bezier(0.4,0,0.2,1)}
   .tile.merged{animation:merge .25s cubic-bezier(0.4,0,0.2,1); z-index:2}
@@ -359,6 +362,8 @@
     button{padding:9px 10px; font-size:.85rem}
     .splash-logo{font-size:4.5rem}
     .board-wrap{max-height:calc(100vh - 200px)}
+    .board{padding:6px; gap:6px}
+    .tiles{inset:6px}
   }
 
   @media (max-height:600px){
@@ -368,7 +373,6 @@
 </head>
 <body>
 
-<!-- ===== SPLASH SCREEN ===== -->
 <div id="splash">
   <div class="splash-particles" id="particles"></div>
   <div class="splash-content">
@@ -386,7 +390,6 @@
   </div>
 </div>
 
-<!-- ===== HEADER ===== -->
 <header>
   <h1>2048</h1>
   <div class="scores">
@@ -398,7 +401,7 @@
 <div class="controls">
   <button id="btnNew">Новая</button>
   <button id="btnUndo">↶ Ход назад</button>
-  <button id="btnSettings">⚙ Настройки</button>
+  <button id="btnSettings"> Настройки</button>
   <button id="btnLeader">🏆 Рейтинг</button>
 </div>
 
@@ -413,7 +416,6 @@
 
 <footer>Игрок: <span id="playerName">гость</span> · Режим: <span id="modeLabel">4×4</span></footer>
 
-<!-- ===== SETTINGS MODAL ===== -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
     <button class="close-x" data-close="settingsModal">×</button>
@@ -446,7 +448,6 @@
   </div>
 </div>
 
-<!-- ===== LEADER MODAL ===== -->
 <div class="modal-bg" id="leaderModal">
   <div class="modal">
     <button class="close-x" data-close="leaderModal">×</button>
@@ -612,7 +613,7 @@
           if(state.grid[r][c]>=target){
             state.won=true;
             playWinSound();
-            showOverlay('Победа! 🎉','Продолжить');
+            showOverlay('Победа! ','Продолжить');
             return true;
           }
     }
@@ -662,7 +663,7 @@
     saveGame();
   }
 
-  // ===== Рендер =====
+  // ===== Рендер (ИСПРАВЛЕННЫЙ — ЧЕРЕЗ GRID) =====
   const boardEl = document.getElementById('board');
   const tilesEl = document.getElementById('tiles');
   const scoreEl = document.getElementById('score');
@@ -672,14 +673,21 @@
 
   function render(){
     const n = state.size;
-    const gap = window.innerWidth <= 480 ? 6 : 8;
-    const padding = window.innerWidth <= 480 ? 6 : 8;
+    const isMobile = window.innerWidth <= 480;
+    const gap = isMobile ? 6 : 8;
+    const padding = isMobile ? 6 : 8;
 
-    boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
-    boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+    // Настраиваем обе сетки одинаково
+    const gridTemplate = `repeat(${n}, 1fr)`;
+    boardEl.style.gridTemplateColumns = gridTemplate;
+    boardEl.style.gridTemplateRows = gridTemplate;
     boardEl.style.padding = padding + 'px';
     boardEl.style.gap = gap + 'px';
 
+    tilesEl.style.gridTemplateColumns = gridTemplate;
+    tilesEl.style.gridTemplateRows = gridTemplate;
+
+    // Очищаем доску
     boardEl.innerHTML = '';
     for(let i=0;i<n*n;i++){
       const d = document.createElement('div');
@@ -687,29 +695,29 @@
       boardEl.appendChild(d);
     }
 
-    const boardRect = boardEl.getBoundingClientRect();
-    const containerSize = boardRect.width - padding * 2;
-    const cellSize = (containerSize - gap * (n - 1)) / n;
-
-    tilesEl.style.left = padding + 'px';
-    tilesEl.style.top = padding + 'px';
-    tilesEl.style.width = containerSize + 'px';
-    tilesEl.style.height = containerSize + 'px';
+    // Очищаем плитки
     tilesEl.innerHTML = '';
 
+    // Создаём плитки
     for(let r=0;r<n;r++){
       for(let c=0;c<n;c++){
         const v = state.grid[r][c];
         if(!v) continue;
+        
         const t = document.createElement('div');
         t.className = 'tile' + tileClass(v);
         t.textContent = v;
-        t.style.width = cellSize + 'px';
-        t.style.height = cellSize + 'px';
-        t.style.left = (c * (cellSize + gap)) + 'px';
-        t.style.top = (r * (cellSize + gap)) + 'px';
-        const fontSize = Math.max(14, Math.min(cellSize * 0.45, 48));
+        
+        // Позиционируем через grid-area
+        const rowStart = r + 1;
+        const colStart = c + 1;
+        t.style.gridRow = `${rowStart} / ${rowStart + 1}`;
+        t.style.gridColumn = `${colStart} / ${colStart + 1}`;
+        
+        // Размер шрифта
+        const fontSize = isMobile ? 28 : 36;
         t.style.fontSize = fontSize + 'px';
+        
         tilesEl.appendChild(t);
       }
     }
@@ -808,7 +816,7 @@
     if(e.key==='z' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
   });
 
-  // ===== Свайпы с блокировкой скролла =====
+  // ===== Свайпы =====
   const boardWrap = document.getElementById('boardWrap');
   let tx=0, ty=0, touchStartTime=0;
 
@@ -820,7 +828,6 @@
   }, {passive:true});
 
   boardWrap.addEventListener('touchmove', (e)=>{
-    // Блокируем скролл страницы при свайпе по доске
     e.preventDefault();
   }, {passive:false});
 
@@ -829,12 +836,11 @@
     const dy = e.changedTouches[0].clientY - ty;
     const dt = Date.now() - touchStartTime;
     if(Math.abs(dx)<30 && Math.abs(dy)<30) return;
-    if(dt > 1000) return; // слишком долгий тап
+    if(dt > 1000) return;
     const dir = Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
     if(move(dir)){ render(); saveGame(); }
   }, {passive:true});
 
-  // Предотвращение скролла на всём документе при свайпе
   document.addEventListener('touchmove', (e)=>{
     if(e.target.closest('.board-wrap')){
       e.preventDefault();
@@ -901,10 +907,10 @@
     if(val > 0) playClickSound();
   };
   function updateVolumeIcon(val){
-    if(val===0) volumeIcon.textContent='🔇';
+    if(val===0) volumeIcon.textContent='';
     else if(val<33) volumeIcon.textContent='🔈';
-    else if(val<66) volumeIcon.textContent='🔉';
-    else volumeIcon.textContent='🔊';
+    else if(val<66) volumeIcon.textContent='';
+    else volumeIcon.textContent='';
   }
 
   function currentSelectedTheme(){
@@ -938,7 +944,7 @@
     if(document.visibilityState==='hidden') saveGame();
   });
 
-  // ===== SPLASH SCREEN — 10 секунд =====
+  // ===== SPLASH =====
   function createParticles(){
     const container = document.getElementById('particles');
     for(let i=0;i<15;i++){
@@ -955,7 +961,7 @@
   function runSplash(){
     createParticles();
     const bar = document.getElementById('progressBar');
-    const duration = 10000; // 10 секунд
+    const duration = 10000;
     const startTime = Date.now();
 
     const interval = setInterval(()=>{
@@ -965,7 +971,6 @@
 
       if(elapsed >= duration){
         clearInterval(interval);
-        // Плавное скрытие
         const splash = document.getElementById('splash');
         splash.classList.add('hide');
         setTimeout(()=>{
@@ -983,16 +988,17 @@
     state.size = settings.size;
     newGame();
   } else {
-    render();
+    setTimeout(()=>{ render(); }, 100);
   }
 
-  // Запускаем splash на 10 секунд
   runSplash();
 
   let resizeTimer;
   window.addEventListener('resize', ()=>{
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(render, 100);
+    resizeTimer = setTimeout(()=>{
+      requestAnimationFrame(render);
+    }, 150);
   });
 
   if('serviceWorker' in navigator){
