@@ -1,8 +1,12 @@
-const CACHE = 'game2048-v1';
+const CACHE = 'game2048-v2';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c=>c.addAll(ASSETS))
+      .catch(err=>console.log('Cache failed:', err))
+  );
   self.skipWaiting();
 });
 
@@ -17,12 +21,18 @@ self.addEventListener('activate', e=>{
 
 self.addEventListener('fetch', e=>{
   e.respondWith(
-    caches.match(e.request).then(r=>r || fetch(e.request).then(resp=>{
-      if(resp.ok && e.request.method==='GET'){
-        const copy = resp.clone();
-        caches.open(CACHE).then(c=>c.put(e.request, copy));
-      }
-      return resp;
-    }).catch(()=>caches.match('./index.html')))
+    caches.match(e.request).then(r=>{
+      return r || fetch(e.request).then(resp=>{
+        if(resp.ok && e.request.method==='GET'){
+          const copy = resp.clone();
+          caches.open(CACHE).then(c=>c.put(e.request, copy));
+        }
+        return resp;
+      }).catch(()=>{
+        if(e.request.mode === 'navigate'){
+          return caches.match('./index.html');
+        }
+      });
+    })
   );
 });
