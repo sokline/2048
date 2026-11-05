@@ -48,6 +48,37 @@
     padding:12px; min-height:100vh; transition:background .3s;
     user-select:none;
   }
+  
+  /* Splash Screen */
+  #splash{
+    position:fixed; inset:0; z-index:1000;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .5s;
+  }
+  #splash.hide{opacity:0; pointer-events:none}
+  .splash-content{
+    text-align:center;
+    animation:fadeInUp .8s ease-out;
+  }
+  .splash-logo{
+    font-size:4rem; font-weight:800;
+    color:var(--accent);
+    animation:pulse 1.5s ease-in-out infinite;
+  }
+  .splash-text{
+    margin-top:16px; font-size:1.2rem;
+    opacity:.7;
+  }
+  @keyframes fadeInUp{
+    from{opacity:0; transform:translateY(30px)}
+    to{opacity:1; transform:translateY(0)}
+  }
+  @keyframes pulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.05)}
+  }
+
   header{
     width:100%; max-width:480px;
     display:flex; justify-content:space-between; align-items:center;
@@ -95,13 +126,21 @@
     position:absolute;
     display:flex; align-items:center; justify-content:center;
     font-weight:800; border-radius:4px;
-    transition:transform .12s ease-in-out;
+    transition:transform .15s cubic-bezier(0.4, 0, 0.2, 1);
     background:#eee4da; color:var(--text);
   }
-  .tile.new{animation:pop .2s ease-out}
-  .tile.merged{animation:merge .2s ease-out; z-index:2}
-  @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
-  @keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .tile.new{animation:pop .25s cubic-bezier(0.4, 0, 0.2, 1)}
+  .tile.merged{animation:merge .25s cubic-bezier(0.4, 0, 0.2, 1); z-index:2}
+  @keyframes pop{
+    0%{transform:scale(0) rotate(-10deg); opacity:0}
+    50%{transform:scale(1.1) rotate(5deg)}
+    100%{transform:scale(1) rotate(0); opacity:1}
+  }
+  @keyframes merge{
+    0%{transform:scale(1)}
+    40%{transform:scale(1.25)}
+    100%{transform:scale(1)}
+  }
 
   /* Цвета плиток */
   .t2{background:#eee4da;color:#776e65}
@@ -172,6 +211,26 @@
   .theme-btn[data-t="sepia"]{background:#f4ecd8; color:#5b4636}
   .theme-btn[data-t="forest"]{background:#1b2e1f; color:#d4e8d0}
 
+  .volume-control{
+    display:flex; align-items:center; gap:10px;
+    margin-top:10px; padding:10px;
+    background:var(--cell); border-radius:6px;
+  }
+  .volume-control input[type="range"]{
+    flex:1; height:6px; border-radius:3px;
+    background:var(--board); outline:none;
+    -webkit-appearance:none;
+  }
+  .volume-control input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px;
+    border-radius:50%; background:var(--accent); cursor:pointer;
+  }
+  .volume-control input[type="range"]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%;
+    background:var(--accent); cursor:pointer; border:none;
+  }
+  .volume-icon{font-size:1.3rem; min-width:30px}
+
   .leaderboard{margin-top:10px}
   .lb-row{
     display:flex; justify-content:space-between;
@@ -184,6 +243,8 @@
   .lb-row .sc{font-weight:700; margin-left:8px}
   .lb-row .mode{font-size:.75rem; opacity:.7; margin-left:8px}
   .lb-empty{text-align:center; padding:20px; opacity:.6}
+  .lb-actions{display:flex; gap:8px; margin-top:12px}
+  .lb-actions button{font-size:.85rem; padding:8px 12px}
 
   footer{
     margin-top:16px; font-size:.75rem; opacity:.6;
@@ -197,10 +258,19 @@
     button{padding:9px 10px; font-size:.85rem}
     .board{padding:6px; gap:6px}
     .tiles{inset:6px}
+    .splash-logo{font-size:3rem}
   }
 </style>
 </head>
 <body>
+
+<!-- Splash Screen -->
+<div id="splash">
+  <div class="splash-content">
+    <div class="splash-logo">2048</div>
+    <div class="splash-text">Загрузка...</div>
+  </div>
+</div>
 
 <header>
   <h1>2048</h1>
@@ -255,6 +325,13 @@
       <div class="theme-btn" data-t="forest">Лес</div>
     </div>
 
+    <label>Звук</label>
+    <div class="volume-control">
+      <span class="volume-icon" id="volumeIcon">🔊</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="50">
+      <span id="volumeValue">50%</span>
+    </div>
+
     <div class="row">
       <button id="saveSettings">Сохранить</button>
     </div>
@@ -267,9 +344,12 @@
     <button class="close-x" data-close="leaderModal">×</button>
     <h3>🏆 Таблица лидеров</h3>
     <div class="leaderboard" id="leaderboard"></div>
-    <div class="row">
-      <button id="clearLeader">Очистить рейтинг</button>
+    <div class="lb-actions">
+      <button id="exportLeader">📤 Экспорт</button>
+      <button id="importLeader">📥 Импорт</button>
+      <button id="clearLeader">🗑 Очистить</button>
     </div>
+    <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
 </div>
 
@@ -287,8 +367,66 @@
     history: [], won: false, over: false
   };
   let settings = {
-    theme: 'light', size: 4, login: ''
+    theme: 'light', size: 4, login: '',
+    volume: 50, soundEnabled: true
   };
+
+  // ===== Звуковая система =====
+  let audioCtx = null;
+  function initAudio(){
+    if(!audioCtx){
+      try{
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }catch(e){
+        console.warn('Audio not supported');
+      }
+    }
+  }
+  
+  function playTone(freq, duration, type='sine'){
+    if(!settings.soundEnabled || !audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = type;
+    osc.frequency.value = freq;
+    
+    const vol = settings.volume / 100;
+    gain.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + duration);
+  }
+  
+  function playMoveSound(){
+    playTone(220, 0.08, 'sine');
+  }
+  
+  function playMergeSound(value){
+    const baseFreq = 300 + Math.log2(value) * 50;
+    playTone(baseFreq, 0.15, 'triangle');
+    setTimeout(()=>playTone(baseFreq * 1.5, 0.1, 'sine'), 50);
+  }
+  
+  function playWinSound(){
+    [523, 659, 784, 1047].forEach((f, i)=>{
+      setTimeout(()=>playTone(f, 0.2, 'sine'), i * 100);
+    });
+  }
+  
+  function playLoseSound(){
+    [400, 350, 300, 250].forEach((f, i)=>{
+      setTimeout(()=>playTone(f, 0.2, 'sawtooth'), i * 150);
+    });
+  }
+  
+  function playClickSound(){
+    playTone(800, 0.05, 'square');
+  }
 
   // ===== Загрузка =====
   function loadSettings(){
@@ -342,33 +480,38 @@
     const arr = row.filter(v=>v);
     let gained = 0;
     const merged = [];
+    const mergedPositions = [];
     for(let i=0;i<arr.length;i++){
       if(i<arr.length-1 && arr[i]===arr[i+1]){
         const v = arr[i]*2;
         merged.push(v);
+        mergedPositions.push(merged.length-1);
         gained += v;
         i++;
       } else merged.push(arr[i]);
     }
     while(merged.length<state.size) merged.push(0);
-    return {row:merged, gained};
+    return {row:merged, gained, mergedPositions};
   }
 
   function move(dir){
     if(state.over) return false;
     const before = clone(state.grid);
     let gained = 0;
+    let mergedValues = [];
     const n = state.size;
 
     if(dir==='left'){
       for(let r=0;r<n;r++){
         const res = slideRow(state.grid[r]);
         state.grid[r] = res.row; gained += res.gained;
+        mergedValues.push(...res.mergedPositions.map(p=>({r,c:p,v:res.row[p]})));
       }
     } else if(dir==='right'){
       for(let r=0;r<n;r++){
         const res = slideRow(state.grid[r].slice().reverse());
         state.grid[r] = res.row.reverse(); gained += res.gained;
+        mergedValues.push(...res.mergedPositions.map(p=>({r,c:n-1-p,v:res.row.reverse()[p]})));
       }
     } else if(dir==='up'){
       for(let c=0;c<n;c++){
@@ -376,6 +519,7 @@
         const res = slideRow(col);
         for(let r=0;r<n;r++) state.grid[r][c] = res.row[r];
         gained += res.gained;
+        mergedValues.push(...res.mergedPositions.map(p=>({r:p,c,v:res.row[p]})));
       }
     } else if(dir==='down'){
       for(let c=0;c<n;c++){
@@ -384,6 +528,7 @@
         const row = res.row.reverse();
         for(let r=0;r<n;r++) state.grid[r][c] = row[r];
         gained += res.gained;
+        mergedValues.push(...res.mergedPositions.map(p=>({r:n-1-p,c,v:row[p]})));
       }
     }
 
@@ -396,17 +541,36 @@
 
     state.score += gained;
     if(state.score>state.best) state.best = state.score;
-    spawnTile();
+    
+    const newTile = spawnTile();
+    
+    // Звуки
+    playMoveSound();
+    if(mergedValues.length>0){
+      setTimeout(()=>{
+        mergedValues.forEach(m=>playMergeSound(m.v));
+      }, 100);
+    }
 
     // Проверка победы
     const target = TARGETS[state.size];
     if(!state.won){
       for(let r=0;r<n;r++)
         for(let c=0;c<n;c++)
-          if(state.grid[r][c]>=target){ state.won=true; showOverlay('Победа! 🎉','Продолжить'); return true; }
+          if(state.grid[r][c]>=target){ 
+            state.won=true; 
+            playWinSound();
+            showOverlay('Победа! 🎉','Продолжить'); 
+            return true; 
+          }
     }
     // Проверка проигрыша
-    if(isGameOver()){ state.over=true; showOverlay('Игра окончена','Новая игра'); saveScore(); }
+    if(isGameOver()){ 
+      state.over=true; 
+      playLoseSound();
+      showOverlay('Игра окончена','Новая игра'); 
+      saveScore(); 
+    }
 
     return true;
   }
@@ -424,6 +588,7 @@
 
   function undo(){
     if(!state.history.length) return;
+    playClickSound();
     const prev = state.history.pop();
     state.grid = prev.grid;
     state.score = prev.score;
@@ -434,6 +599,7 @@
   }
 
   function newGame(){
+    playClickSound();
     state = {
       grid: emptyGrid(settings.size),
       size: settings.size,
@@ -480,7 +646,6 @@
         t.style.transform = `translate(${c*(100/n)}%, ${r*(100/n)}%)`;
         t.style.left = `calc(${c*gap/n}px)`;
         t.style.top = `calc(${r*gap/n}px)`;
-        // Размер шрифта
         const base = window.innerWidth<=480 ? 28 : 40;
         t.style.fontSize = base + 'px';
         tilesEl.appendChild(t);
@@ -508,7 +673,8 @@
   }
   function hideOverlay(){overlayEl.classList.remove('show')}
   overlayBtn.onclick = () => {
-    if(state.won && !state.over){ hideOverlay(); return; } // продолжить
+    playClickSound();
+    if(state.won && !state.over){ hideOverlay(); return; }
     newGame();
   };
 
@@ -539,12 +705,57 @@
   }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+  // Экспорт/Импорт рейтинга
+  function exportLeaderboard(){
+    playClickSound();
+    const list = loadLeader();
+    const data = JSON.stringify(list, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `2048-leaderboard-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importLeaderboard(){
+    playClickSound();
+    document.getElementById('importFile').click();
+  }
+
+  function handleImport(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!Array.isArray(data)) throw new Error('Invalid format');
+        const current = loadLeader();
+        const merged = [...current, ...data];
+        merged.sort((a,b)=>b.score-a.score);
+        saveLeader(merged.slice(0,50));
+        renderLeader();
+        alert(`Импортировано ${data.length} записей`);
+      }catch(err){
+        alert('Ошибка импорта: неверный формат файла');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
   // ===== Управление =====
   document.addEventListener('keydown', e=>{
     const map = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
                  a:'left',d:'right',w:'up',s:'down'};
     const dir = map[e.key];
-    if(dir){ e.preventDefault(); if(move(dir)){ render(); saveGame(); } }
+    if(dir){ 
+      e.preventDefault(); 
+      initAudio();
+      if(move(dir)){ render(); saveGame(); } 
+    }
     if(e.key==='z' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
   });
 
@@ -552,6 +763,7 @@
   let tx=0, ty=0;
   document.addEventListener('touchstart', e=>{
     tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+    initAudio();
   }, {passive:true});
   document.addEventListener('touchend', e=>{
     const dx = e.changedTouches[0].clientX - tx;
@@ -565,45 +777,86 @@
 
   // Кнопки
   document.getElementById('btnNew').onclick = ()=>{
+    initAudio();
     if(state.score>0 && !confirm('Начать новую игру?')) return;
     newGame();
   };
   document.getElementById('btnUndo').onclick = undo;
   document.getElementById('btnSettings').onclick = ()=>{
+    initAudio();
+    playClickSound();
     document.getElementById('loginInput').value = settings.login;
     document.getElementById('sizeSelect').value = settings.size;
+    document.getElementById('volumeSlider').value = settings.volume;
+    document.getElementById('volumeValue').textContent = settings.volume + '%';
+    updateVolumeIcon(settings.volume);
     document.querySelectorAll('.theme-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.t===settings.theme);
     });
     document.getElementById('settingsModal').classList.add('show');
   };
   document.getElementById('btnLeader').onclick = ()=>{
+    initAudio();
+    playClickSound();
     renderLeader();
     document.getElementById('leaderModal').classList.add('show');
   };
   document.getElementById('saveSettings').onclick = ()=>{
+    playClickSound();
     const newLogin = document.getElementById('loginInput').value.trim();
     const newSize = +document.getElementById('sizeSelect').value;
+    const newVolume = +document.getElementById('volumeSlider').value;
     const themeChanged = settings.theme !== currentSelectedTheme();
+    
     settings.login = newLogin;
     settings.size = newSize;
+    settings.volume = newVolume;
+    settings.soundEnabled = newVolume > 0;
+    
     if(themeChanged) applyTheme(currentSelectedTheme());
     saveSettings();
     if(newSize !== state.size) newGame();
     else { render(); saveGame(); }
     closeModal('settingsModal');
   };
+  document.getElementById('exportLeader').onclick = exportLeaderboard;
+  document.getElementById('importLeader').onclick = importLeaderboard;
+  document.getElementById('importFile').onchange = handleImport;
   document.getElementById('clearLeader').onclick = ()=>{
+    playClickSound();
     if(confirm('Очистить весь рейтинг?')){
       saveLeader([]); renderLeader();
     }
   };
+  
+  // Громкость
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeValue = document.getElementById('volumeValue');
+  const volumeIcon = document.getElementById('volumeIcon');
+  
+  volumeSlider.oninput = (e)=>{
+    const val = +e.target.value;
+    volumeValue.textContent = val + '%';
+    updateVolumeIcon(val);
+    settings.volume = val;
+    settings.soundEnabled = val > 0;
+    if(val > 0) playClickSound();
+  };
+  
+  function updateVolumeIcon(val){
+    if(val === 0) volumeIcon.textContent = '🔇';
+    else if(val < 33) volumeIcon.textContent = '🔈';
+    else if(val < 66) volumeIcon.textContent = '🔉';
+    else volumeIcon.textContent = '🔊';
+  }
+  
   function currentSelectedTheme(){
     const el = document.querySelector('.theme-btn.active');
     return el ? el.dataset.t : settings.theme;
   }
   document.querySelectorAll('.theme-btn').forEach(b=>{
     b.onclick = ()=>{
+      playClickSound();
       document.querySelectorAll('.theme-btn').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
     };
@@ -611,10 +864,18 @@
 
   // Закрытие модалок
   document.querySelectorAll('[data-close]').forEach(b=>{
-    b.onclick = ()=>closeModal(b.dataset.close);
+    b.onclick = ()=>{
+      playClickSound();
+      closeModal(b.dataset.close);
+    };
   });
   document.querySelectorAll('.modal-bg').forEach(m=>{
-    m.onclick = e=>{ if(e.target===m) m.classList.remove('show'); };
+    m.onclick = e=>{ 
+      if(e.target===m){
+        playClickSound();
+        m.classList.remove('show');
+      }
+    };
   });
   function closeModal(id){document.getElementById(id).classList.remove('show')}
 
@@ -641,12 +902,22 @@
     render();
   }
 
+  // Скрыть splash screen
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(()=>{
+      document.getElementById('splash').style.display = 'none';
+    }, 500);
+  }, 800);
+
   // Рерender при ресайзе
   window.addEventListener('resize', render);
 
-  // ===== Service Worker =====
+  // ===== Service Worker (опционально) =====
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js').catch(err=>{
+      console.log('SW registration failed:', err);
+    });
   }
 })();
 </script>
