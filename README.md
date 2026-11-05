@@ -16,12 +16,6 @@
 - **ПК:** стрелки или WASD, `Ctrl+Z` — отмена хода
 - **Мобильные:** свайпы
 
-## Развёртывание на GitHub Pages
-1. Создайте публичный репозиторий
-2. Загрузите `index.html`, `manifest.json`, `sw.js`, `README.md`
-3. Settings → Pages → Source: `main` branch, `/ (root)`
-4. Откройте `https://<username>.github.io/<repo>/`
-
 ## Хранение данных
 Всё хранится локально в `localStorage`:
 - `game2048_v1` — текущая игра
