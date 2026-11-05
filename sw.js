@@ -1,4 +1,4 @@
-const CACHE = 'game2048-v2';
+const CACHE = 'game2048-v3';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
