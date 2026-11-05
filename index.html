@@ -1,1 +1,654 @@
-[]
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1a1a1a">
+<title>2048 — PWA</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23edc22e%22/><text x=%2250%22 y=%2268%22 font-size=%2255%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22%23fff%22>2048</text></svg>">
+<style>
+  :root{
+    --bg:#f5f0e8; --board:#bbada0; --cell:#cdc1b4;
+    --text:#776e65; --text-light:#f9f6f2; --accent:#edc22e;
+    --btn:#8f7a66; --btn-hover:#9f8b77; --overlay:rgba(238,228,218,.73);
+  }
+  [data-theme="dark"]{
+    --bg:#1a1a1a; --board:#2c2c2c; --cell:#3a3a3a;
+    --text:#e0e0e0; --text-light:#f5f5f5; --accent:#edc22e;
+    --btn:#444; --btn-hover:#555; --overlay:rgba(20,20,20,.8);
+  }
+  [data-theme="neutral"]{
+    --bg:#e8e8e8; --board:#9e9e9e; --cell:#bdbdbd;
+    --text:#424242; --text-light:#fafafa; --accent:#ffa726;
+    --btn:#757575; --btn-hover:#616161; --overlay:rgba(180,180,180,.7);
+  }
+  [data-theme="ocean"]{
+    --bg:#0d1b2a; --board:#1b263b; --cell:#415a77;
+    --text:#e0e1dd; --text-light:#f8f9fa; --accent:#778da9;
+    --btn:#415a77; --btn-hover:#556d8a; --overlay:rgba(13,27,42,.8);
+  }
+  [data-theme="sepia"]{
+    --bg:#f4ecd8; --board:#a8876a; --cell:#d4b896;
+    --text:#5b4636; --text-light:#fdf6e3; --accent:#d4a373;
+    --btn:#8b6f47; --btn-hover:#a0825a; --overlay:rgba(244,236,216,.75);
+  }
+  [data-theme="forest"]{
+    --bg:#1b2e1f; --board:#2d4a33; --cell:#3d6044;
+    --text:#d4e8d0; --text-light:#f0f7ee; --accent:#8bc34a;
+    --btn:#3d6044; --btn-hover:#4d7555; --overlay:rgba(27,46,31,.8);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow-x:hidden}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--text);
+    display:flex; flex-direction:column; align-items:center;
+    padding:12px; min-height:100vh; transition:background .3s;
+    user-select:none;
+  }
+  header{
+    width:100%; max-width:480px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:12px; flex-wrap:wrap; gap:8px;
+  }
+  h1{font-size:2.2rem; color:var(--accent); font-weight:800; letter-spacing:-1px}
+  .scores{display:flex; gap:8px}
+  .score-box{
+    background:var(--board); color:var(--text-light);
+    padding:8px 14px; border-radius:6px; text-align:center;
+    min-width:70px;
+  }
+  .score-box .label{font-size:.7rem; text-transform:uppercase; opacity:.7}
+  .score-box .value{font-size:1.3rem; font-weight:700}
+
+  .controls{
+    width:100%; max-width:480px;
+    display:flex; gap:6px; flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  button{
+    background:var(--btn); color:var(--text-light);
+    border:none; padding:10px 14px; border-radius:6px;
+    font-size:.9rem; font-weight:600; cursor:pointer;
+    transition:background .2s, transform .1s;
+    flex:1; min-width:80px;
+  }
+  button:hover{background:var(--btn-hover)}
+  button:active{transform:scale(.96)}
+  button:disabled{opacity:.4; cursor:not-allowed}
+
+  .board-wrap{
+    position:relative; width:100%; max-width:480px;
+    aspect-ratio:1/1;
+  }
+  .board{
+    position:absolute; inset:0;
+    background:var(--board); border-radius:8px;
+    padding:8px; display:grid; gap:8px;
+    transition:background .3s;
+  }
+  .cell{background:var(--cell); border-radius:4px}
+  .tiles{position:absolute; inset:8px; pointer-events:none}
+  .tile{
+    position:absolute;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; border-radius:4px;
+    transition:transform .12s ease-in-out;
+    background:#eee4da; color:var(--text);
+  }
+  .tile.new{animation:pop .2s ease-out}
+  .tile.merged{animation:merge .2s ease-out; z-index:2}
+  @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+  @keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+  /* Цвета плиток */
+  .t2{background:#eee4da;color:#776e65}
+  .t4{background:#ede0c8;color:#776e65}
+  .t8{background:#f2b179;color:#f9f6f2}
+  .t16{background:#f59563;color:#f9f6f2}
+  .t32{background:#f67c5f;color:#f9f6f2}
+  .t64{background:#f65e3b;color:#f9f6f2}
+  .t128{background:#edcf72;color:#f9f6f2;font-size:.85em}
+  .t256{background:#edcc61;color:#f9f6f2;font-size:.85em}
+  .t512{background:#edc850;color:#f9f6f2;font-size:.85em}
+  .t1024{background:#edc53f;color:#f9f6f2;font-size:.7em}
+  .t2048{background:#edc22e;color:#f9f6f2;font-size:.7em}
+  .t4096{background:#3c3a32;color:#f9f6f2;font-size:.65em}
+  .t8192{background:#2c2a22;color:#f9f6f2;font-size:.6em}
+  .tsuper{background:#000;color:#fff;font-size:.55em}
+
+  .overlay{
+    position:absolute; inset:0;
+    background:var(--overlay);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    border-radius:8px; z-index:10;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .overlay.show{opacity:1; pointer-events:auto}
+  .overlay h2{font-size:2rem; margin-bottom:16px; color:var(--text)}
+  .overlay button{flex:0 0 auto; width:auto; padding:12px 24px}
+
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center;
+    z-index:100; padding:16px;
+  }
+  .modal-bg.show{display:flex}
+  .modal{
+    background:var(--bg); color:var(--text);
+    border-radius:10px; padding:20px;
+    width:100%; max-width:420px; max-height:90vh;
+    overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3);
+  }
+  .modal h3{margin-bottom:14px; font-size:1.4rem}
+  .modal label{display:block; margin:10px 0 4px; font-size:.9rem; font-weight:600}
+  .modal input, .modal select{
+    width:100%; padding:10px; border-radius:6px;
+    border:1px solid var(--cell); background:var(--cell);
+    color:var(--text); font-size:1rem;
+  }
+  .modal .row{display:flex; gap:8px; margin-top:16px}
+  .modal .row button{flex:1}
+  .close-x{
+    float:right; background:none; color:var(--text);
+    font-size:1.5rem; padding:0 8px; flex:0 0 auto; min-width:0;
+  }
+  .close-x:hover{background:none}
+
+  .theme-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px}
+  .theme-btn{
+    padding:14px 8px; border-radius:6px;
+    border:2px solid transparent; cursor:pointer;
+    font-weight:600; font-size:.85rem;
+  }
+  .theme-btn.active{border-color:var(--accent)}
+  .theme-btn[data-t="light"]{background:#f5f0e8; color:#776e65}
+  .theme-btn[data-t="dark"]{background:#1a1a1a; color:#e0e0e0}
+  .theme-btn[data-t="neutral"]{background:#e8e8e8; color:#424242}
+  .theme-btn[data-t="ocean"]{background:#0d1b2a; color:#e0e1dd}
+  .theme-btn[data-t="sepia"]{background:#f4ecd8; color:#5b4636}
+  .theme-btn[data-t="forest"]{background:#1b2e1f; color:#d4e8d0}
+
+  .leaderboard{margin-top:10px}
+  .lb-row{
+    display:flex; justify-content:space-between;
+    padding:10px 12px; background:var(--cell);
+    border-radius:6px; margin-bottom:6px;
+    align-items:center;
+  }
+  .lb-row .rank{font-weight:700; color:var(--accent); min-width:30px}
+  .lb-row .name{flex:1; margin-left:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lb-row .sc{font-weight:700; margin-left:8px}
+  .lb-row .mode{font-size:.75rem; opacity:.7; margin-left:8px}
+  .lb-empty{text-align:center; padding:20px; opacity:.6}
+
+  footer{
+    margin-top:16px; font-size:.75rem; opacity:.6;
+    text-align:center;
+  }
+
+  @media (max-width:480px){
+    h1{font-size:1.8rem}
+    .score-box{padding:6px 10px; min-width:60px}
+    .score-box .value{font-size:1.1rem}
+    button{padding:9px 10px; font-size:.85rem}
+    .board{padding:6px; gap:6px}
+    .tiles{inset:6px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>2048</h1>
+  <div class="scores">
+    <div class="score-box"><div class="label">Счёт</div><div class="value" id="score">0</div></div>
+    <div class="score-box"><div class="label">Лучший</div><div class="value" id="best">0</div></div>
+  </div>
+</header>
+
+<div class="controls">
+  <button id="btnNew">Новая</button>
+  <button id="btnUndo">↶ Ход назад</button>
+  <button id="btnSettings">⚙ Настройки</button>
+  <button id="btnLeader">🏆 Рейтинг</button>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="overlay" id="overlay">
+    <h2 id="overlayText">Игра окончена!</h2>
+    <button id="overlayBtn">Новая игра</button>
+  </div>
+</div>
+
+<footer>Игрок: <span id="playerName">гость</span> · Режим: <span id="modeLabel">4×4</span></footer>
+
+<!-- Модалка настроек -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <button class="close-x" data-close="settingsModal">×</button>
+    <h3>Настройки</h3>
+
+    <label>Ваш логин</label>
+    <input type="text" id="loginInput" maxlength="20" placeholder="Введите логин">
+
+    <label>Размер поля</label>
+    <select id="sizeSelect">
+      <option value="3">3 × 3 (цель: 512)</option>
+      <option value="4" selected>4 × 4 (цель: 2048)</option>
+      <option value="5">5 × 5 (цель: 4096)</option>
+      <option value="6">6 × 6 (цель: 8192)</option>
+    </select>
+
+    <label>Тема оформления</label>
+    <div class="theme-grid" id="themeGrid">
+      <div class="theme-btn" data-t="light">Светлая</div>
+      <div class="theme-btn" data-t="dark">Тёмная</div>
+      <div class="theme-btn" data-t="neutral">Нейтральная</div>
+      <div class="theme-btn" data-t="ocean">Океан</div>
+      <div class="theme-btn" data-t="sepia">Сепия</div>
+      <div class="theme-btn" data-t="forest">Лес</div>
+    </div>
+
+    <div class="row">
+      <button id="saveSettings">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка рейтинга -->
+<div class="modal-bg" id="leaderModal">
+  <div class="modal">
+    <button class="close-x" data-close="leaderModal">×</button>
+    <h3>🏆 Таблица лидеров</h3>
+    <div class="leaderboard" id="leaderboard"></div>
+    <div class="row">
+      <button id="clearLeader">Очистить рейтинг</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== Состояние =====
+  const LS_KEY = 'game2048_v1';
+  const LS_SETTINGS = 'game2048_settings_v1';
+  const LS_LEADER = 'game2048_leader_v1';
+
+  const TARGETS = {3:512, 4:2048, 5:4096, 6:8192};
+
+  let state = {
+    grid: [], size: 4, score: 0, best: 0,
+    history: [], won: false, over: false
+  };
+  let settings = {
+    theme: 'light', size: 4, login: ''
+  };
+
+  // ===== Загрузка =====
+  function loadSettings(){
+    try{
+      const s = JSON.parse(localStorage.getItem(LS_SETTINGS));
+      if(s) settings = {...settings, ...s};
+    }catch(e){}
+  }
+  function saveSettings(){
+    localStorage.setItem(LS_SETTINGS, JSON.stringify(settings));
+  }
+  function loadGame(){
+    try{
+      const s = JSON.parse(localStorage.getItem(LS_KEY));
+      if(s && s.grid && s.grid.length){
+        state = {...state, ...s};
+        state.history = s.history || [];
+      }
+    }catch(e){}
+  }
+  function saveGame(){
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }
+  function loadLeader(){
+    try{return JSON.parse(localStorage.getItem(LS_LEADER)) || []}catch(e){return []}
+  }
+  function saveLeader(list){
+    localStorage.setItem(LS_LEADER, JSON.stringify(list));
+  }
+
+  // ===== Игровая логика =====
+  function emptyGrid(n){return Array.from({length:n},()=>Array(n).fill(0))}
+  function clone(g){return g.map(r=>r.slice())}
+
+  function emptyCells(){
+    const cells=[];
+    for(let r=0;r<state.size;r++)
+      for(let c=0;c<state.size;c++)
+        if(!state.grid[r][c]) cells.push([r,c]);
+    return cells;
+  }
+  function spawnTile(){
+    const cells=emptyCells();
+    if(!cells.length) return null;
+    const [r,c]=cells[Math.floor(Math.random()*cells.length)];
+    state.grid[r][c] = Math.random()<0.9 ? 2 : 4;
+    return [r,c];
+  }
+
+  function slideRow(row){
+    const arr = row.filter(v=>v);
+    let gained = 0;
+    const merged = [];
+    for(let i=0;i<arr.length;i++){
+      if(i<arr.length-1 && arr[i]===arr[i+1]){
+        const v = arr[i]*2;
+        merged.push(v);
+        gained += v;
+        i++;
+      } else merged.push(arr[i]);
+    }
+    while(merged.length<state.size) merged.push(0);
+    return {row:merged, gained};
+  }
+
+  function move(dir){
+    if(state.over) return false;
+    const before = clone(state.grid);
+    let gained = 0;
+    const n = state.size;
+
+    if(dir==='left'){
+      for(let r=0;r<n;r++){
+        const res = slideRow(state.grid[r]);
+        state.grid[r] = res.row; gained += res.gained;
+      }
+    } else if(dir==='right'){
+      for(let r=0;r<n;r++){
+        const res = slideRow(state.grid[r].slice().reverse());
+        state.grid[r] = res.row.reverse(); gained += res.gained;
+      }
+    } else if(dir==='up'){
+      for(let c=0;c<n;c++){
+        const col = state.grid.map(r=>r[c]);
+        const res = slideRow(col);
+        for(let r=0;r<n;r++) state.grid[r][c] = res.row[r];
+        gained += res.gained;
+      }
+    } else if(dir==='down'){
+      for(let c=0;c<n;c++){
+        const col = state.grid.map(r=>r[c]).reverse();
+        const res = slideRow(col);
+        const row = res.row.reverse();
+        for(let r=0;r<n;r++) state.grid[r][c] = row[r];
+        gained += res.gained;
+      }
+    }
+
+    const changed = JSON.stringify(before)!==JSON.stringify(state.grid);
+    if(!changed) return false;
+
+    // Сохраняем историю для undo (макс 20)
+    state.history.push({grid:before, score:state.score});
+    if(state.history.length>20) state.history.shift();
+
+    state.score += gained;
+    if(state.score>state.best) state.best = state.score;
+    spawnTile();
+
+    // Проверка победы
+    const target = TARGETS[state.size];
+    if(!state.won){
+      for(let r=0;r<n;r++)
+        for(let c=0;c<n;c++)
+          if(state.grid[r][c]>=target){ state.won=true; showOverlay('Победа! 🎉','Продолжить'); return true; }
+    }
+    // Проверка проигрыша
+    if(isGameOver()){ state.over=true; showOverlay('Игра окончена','Новая игра'); saveScore(); }
+
+    return true;
+  }
+
+  function isGameOver(){
+    const n = state.size;
+    for(let r=0;r<n;r++)
+      for(let c=0;c<n;c++){
+        if(!state.grid[r][c]) return false;
+        if(c<n-1 && state.grid[r][c]===state.grid[r][c+1]) return false;
+        if(r<n-1 && state.grid[r][c]===state.grid[r+1][c]) return false;
+      }
+    return true;
+  }
+
+  function undo(){
+    if(!state.history.length) return;
+    const prev = state.history.pop();
+    state.grid = prev.grid;
+    state.score = prev.score;
+    state.over = false;
+    hideOverlay();
+    render();
+    saveGame();
+  }
+
+  function newGame(){
+    state = {
+      grid: emptyGrid(settings.size),
+      size: settings.size,
+      score: 0, best: state.best,
+      history: [], won: false, over: false
+    };
+    spawnTile(); spawnTile();
+    hideOverlay();
+    render();
+    saveGame();
+  }
+
+  // ===== Рендер =====
+  const boardEl = document.getElementById('board');
+  const tilesEl = document.getElementById('tiles');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const modeEl = document.getElementById('modeLabel');
+  const playerEl = document.getElementById('playerName');
+
+  function render(){
+    const n = state.size;
+    boardEl.style.gridTemplateColumns = `repeat(${n},1fr)`;
+    boardEl.style.gridTemplateRows = `repeat(${n},1fr)`;
+    boardEl.innerHTML = '';
+    for(let i=0;i<n*n;i++){
+      const d = document.createElement('div');
+      d.className = 'cell';
+      boardEl.appendChild(d);
+    }
+
+    tilesEl.innerHTML = '';
+    const gap = window.innerWidth<=480 ? 6 : 8;
+    for(let r=0;r<n;r++){
+      for(let c=0;c<n;c++){
+        const v = state.grid[r][c];
+        if(!v) continue;
+        const t = document.createElement('div');
+        const pct = 100/n;
+        t.className = 'tile' + tileClass(v);
+        t.textContent = v;
+        t.style.width = `calc(${pct}% - ${gap*(n-1)/n}px)`;
+        t.style.height = `calc(${pct}% - ${gap*(n-1)/n}px)`;
+        t.style.transform = `translate(${c*(100/n)}%, ${r*(100/n)}%)`;
+        t.style.left = `calc(${c*gap/n}px)`;
+        t.style.top = `calc(${r*gap/n}px)`;
+        // Размер шрифта
+        const base = window.innerWidth<=480 ? 28 : 40;
+        t.style.fontSize = base + 'px';
+        tilesEl.appendChild(t);
+      }
+    }
+    scoreEl.textContent = state.score;
+    bestEl.textContent = state.best;
+    modeEl.textContent = `${n}×${n}`;
+    playerEl.textContent = settings.login || 'гость';
+  }
+
+  function tileClass(v){
+    if(v<=4096) return ' t'+v;
+    return ' tsuper';
+  }
+
+  // ===== Overlay =====
+  const overlayEl = document.getElementById('overlay');
+  const overlayText = document.getElementById('overlayText');
+  const overlayBtn = document.getElementById('overlayBtn');
+  function showOverlay(text, btn){
+    overlayText.textContent = text;
+    overlayBtn.textContent = btn;
+    overlayEl.classList.add('show');
+  }
+  function hideOverlay(){overlayEl.classList.remove('show')}
+  overlayBtn.onclick = () => {
+    if(state.won && !state.over){ hideOverlay(); return; } // продолжить
+    newGame();
+  };
+
+  // ===== Рейтинг =====
+  function saveScore(){
+    const list = loadLeader();
+    list.push({
+      name: settings.login || 'гость',
+      score: state.score,
+      size: state.size,
+      date: Date.now()
+    });
+    list.sort((a,b)=>b.score-a.score);
+    saveLeader(list.slice(0,50));
+  }
+  function renderLeader(){
+    const list = loadLeader();
+    const el = document.getElementById('leaderboard');
+    if(!list.length){ el.innerHTML = '<div class="lb-empty">Пока нет результатов</div>'; return; }
+    el.innerHTML = list.map((x,i)=>`
+      <div class="lb-row">
+        <span class="rank">${i+1}</span>
+        <span class="name">${escapeHtml(x.name)}</span>
+        <span class="mode">${x.size}×${x.size}</span>
+        <span class="sc">${x.score}</span>
+      </div>
+    `).join('');
+  }
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  // ===== Управление =====
+  document.addEventListener('keydown', e=>{
+    const map = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
+                 a:'left',d:'right',w:'up',s:'down'};
+    const dir = map[e.key];
+    if(dir){ e.preventDefault(); if(move(dir)){ render(); saveGame(); } }
+    if(e.key==='z' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
+  });
+
+  // Свайпы
+  let tx=0, ty=0;
+  document.addEventListener('touchstart', e=>{
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if(Math.abs(dx)<30 && Math.abs(dy)<30) return;
+    let dir;
+    if(Math.abs(dx)>Math.abs(dy)) dir = dx>0?'right':'left';
+    else dir = dy>0?'down':'up';
+    if(move(dir)){ render(); saveGame(); }
+  });
+
+  // Кнопки
+  document.getElementById('btnNew').onclick = ()=>{
+    if(state.score>0 && !confirm('Начать новую игру?')) return;
+    newGame();
+  };
+  document.getElementById('btnUndo').onclick = undo;
+  document.getElementById('btnSettings').onclick = ()=>{
+    document.getElementById('loginInput').value = settings.login;
+    document.getElementById('sizeSelect').value = settings.size;
+    document.querySelectorAll('.theme-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.t===settings.theme);
+    });
+    document.getElementById('settingsModal').classList.add('show');
+  };
+  document.getElementById('btnLeader').onclick = ()=>{
+    renderLeader();
+    document.getElementById('leaderModal').classList.add('show');
+  };
+  document.getElementById('saveSettings').onclick = ()=>{
+    const newLogin = document.getElementById('loginInput').value.trim();
+    const newSize = +document.getElementById('sizeSelect').value;
+    const themeChanged = settings.theme !== currentSelectedTheme();
+    settings.login = newLogin;
+    settings.size = newSize;
+    if(themeChanged) applyTheme(currentSelectedTheme());
+    saveSettings();
+    if(newSize !== state.size) newGame();
+    else { render(); saveGame(); }
+    closeModal('settingsModal');
+  };
+  document.getElementById('clearLeader').onclick = ()=>{
+    if(confirm('Очистить весь рейтинг?')){
+      saveLeader([]); renderLeader();
+    }
+  };
+  function currentSelectedTheme(){
+    const el = document.querySelector('.theme-btn.active');
+    return el ? el.dataset.t : settings.theme;
+  }
+  document.querySelectorAll('.theme-btn').forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll('.theme-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+  });
+
+  // Закрытие модалок
+  document.querySelectorAll('[data-close]').forEach(b=>{
+    b.onclick = ()=>closeModal(b.dataset.close);
+  });
+  document.querySelectorAll('.modal-bg').forEach(m=>{
+    m.onclick = e=>{ if(e.target===m) m.classList.remove('show'); };
+  });
+  function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+  function applyTheme(t){
+    settings.theme = t;
+    if(t==='light') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+  }
+
+  // ===== Сохранение при выходе =====
+  window.addEventListener('beforeunload', saveGame);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='hidden') saveGame();
+  });
+
+  // ===== Инициализация =====
+  loadSettings();
+  applyTheme(settings.theme);
+  loadGame();
+  if(!state.grid.length || state.grid.length !== settings.size){
+    state.size = settings.size;
+    newGame();
+  } else {
+    render();
+  }
+
+  // Рерender при ресайзе
+  window.addEventListener('resize', render);
+
+  // ===== Service Worker =====
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
