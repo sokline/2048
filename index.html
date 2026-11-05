@@ -48,8 +48,7 @@
     padding:12px; min-height:100vh; transition:background .3s;
     user-select:none;
   }
-  
-  /* Splash Screen */
+
   #splash{
     position:fixed; inset:0; z-index:1000;
     background:var(--bg);
@@ -57,27 +56,11 @@
     transition:opacity .5s;
   }
   #splash.hide{opacity:0; pointer-events:none}
-  .splash-content{
-    text-align:center;
-    animation:fadeInUp .8s ease-out;
-  }
-  .splash-logo{
-    font-size:4rem; font-weight:800;
-    color:var(--accent);
-    animation:pulse 1.5s ease-in-out infinite;
-  }
-  .splash-text{
-    margin-top:16px; font-size:1.2rem;
-    opacity:.7;
-  }
-  @keyframes fadeInUp{
-    from{opacity:0; transform:translateY(30px)}
-    to{opacity:1; transform:translateY(0)}
-  }
-  @keyframes pulse{
-    0%,100%{transform:scale(1)}
-    50%{transform:scale(1.05)}
-  }
+  .splash-content{text-align:center; animation:fadeInUp .8s ease-out}
+  .splash-logo{font-size:4rem; font-weight:800; color:var(--accent); animation:pulse 1.5s ease-in-out infinite}
+  .splash-text{margin-top:16px; font-size:1.2rem; opacity:.7}
+  @keyframes fadeInUp{from{opacity:0; transform:translateY(30px)} to{opacity:1; transform:translateY(0)}}
+  @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.05)}}
 
   header{
     width:100%; max-width:480px;
@@ -88,17 +71,12 @@
   .scores{display:flex; gap:8px}
   .score-box{
     background:var(--board); color:var(--text-light);
-    padding:8px 14px; border-radius:6px; text-align:center;
-    min-width:70px;
+    padding:8px 14px; border-radius:6px; text-align:center; min-width:70px;
   }
   .score-box .label{font-size:.7rem; text-transform:uppercase; opacity:.7}
   .score-box .value{font-size:1.3rem; font-weight:700}
 
-  .controls{
-    width:100%; max-width:480px;
-    display:flex; gap:6px; flex-wrap:wrap;
-    margin-bottom:12px;
-  }
+  .controls{width:100%; max-width:480px; display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px}
   button{
     background:var(--btn); color:var(--text-light);
     border:none; padding:10px 14px; border-radius:6px;
@@ -110,53 +88,44 @@
   button:active{transform:scale(.96)}
   button:disabled{opacity:.4; cursor:not-allowed}
 
-  .board-wrap{
-    position:relative; width:100%; max-width:480px;
-    aspect-ratio:1/1;
-  }
+  .board-wrap{position:relative; width:100%; max-width:480px; aspect-ratio:1/1}
   .board{
     position:absolute; inset:0;
     background:var(--board); border-radius:8px;
-    padding:8px; display:grid; gap:8px;
+    display:grid;
     transition:background .3s;
   }
   .cell{background:var(--cell); border-radius:4px}
-  .tiles{position:absolute; inset:8px; pointer-events:none}
+  .tiles{position:absolute; pointer-events:none}
   .tile{
     position:absolute;
     display:flex; align-items:center; justify-content:center;
     font-weight:800; border-radius:4px;
-    transition:transform .15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:left .15s cubic-bezier(0.4,0,0.2,1),
+               top .15s cubic-bezier(0.4,0,0.2,1),
+               transform .2s cubic-bezier(0.4,0,0.2,1);
     background:#eee4da; color:var(--text);
+    will-change: left, top;
   }
-  .tile.new{animation:pop .25s cubic-bezier(0.4, 0, 0.2, 1)}
-  .tile.merged{animation:merge .25s cubic-bezier(0.4, 0, 0.2, 1); z-index:2}
-  @keyframes pop{
-    0%{transform:scale(0) rotate(-10deg); opacity:0}
-    50%{transform:scale(1.1) rotate(5deg)}
-    100%{transform:scale(1) rotate(0); opacity:1}
-  }
-  @keyframes merge{
-    0%{transform:scale(1)}
-    40%{transform:scale(1.25)}
-    100%{transform:scale(1)}
-  }
+  .tile.new{animation:pop .25s cubic-bezier(0.4,0,0.2,1)}
+  .tile.merged{animation:merge .25s cubic-bezier(0.4,0,0.2,1); z-index:2}
+  @keyframes pop{0%{transform:scale(0); opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1); opacity:1}}
+  @keyframes merge{0%{transform:scale(1)} 40%{transform:scale(1.2)} 100%{transform:scale(1)}}
 
-  /* Цвета плиток */
   .t2{background:#eee4da;color:#776e65}
   .t4{background:#ede0c8;color:#776e65}
   .t8{background:#f2b179;color:#f9f6f2}
   .t16{background:#f59563;color:#f9f6f2}
   .t32{background:#f67c5f;color:#f9f6f2}
   .t64{background:#f65e3b;color:#f9f6f2}
-  .t128{background:#edcf72;color:#f9f6f2;font-size:.85em}
-  .t256{background:#edcc61;color:#f9f6f2;font-size:.85em}
-  .t512{background:#edc850;color:#f9f6f2;font-size:.85em}
-  .t1024{background:#edc53f;color:#f9f6f2;font-size:.7em}
-  .t2048{background:#edc22e;color:#f9f6f2;font-size:.7em}
-  .t4096{background:#3c3a32;color:#f9f6f2;font-size:.65em}
-  .t8192{background:#2c2a22;color:#f9f6f2;font-size:.6em}
-  .tsuper{background:#000;color:#fff;font-size:.55em}
+  .t128{background:#edcf72;color:#f9f6f2}
+  .t256{background:#edcc61;color:#f9f6f2}
+  .t512{background:#edc850;color:#f9f6f2}
+  .t1024{background:#edc53f;color:#f9f6f2}
+  .t2048{background:#edc22e;color:#f9f6f2}
+  .t4096{background:#3c3a32;color:#f9f6f2}
+  .t8192{background:#2c2a22;color:#f9f6f2}
+  .tsuper{background:#000;color:#fff}
 
   .overlay{
     position:absolute; inset:0;
@@ -235,8 +204,7 @@
   .lb-row{
     display:flex; justify-content:space-between;
     padding:10px 12px; background:var(--cell);
-    border-radius:6px; margin-bottom:6px;
-    align-items:center;
+    border-radius:6px; margin-bottom:6px; align-items:center;
   }
   .lb-row .rank{font-weight:700; color:var(--accent); min-width:30px}
   .lb-row .name{flex:1; margin-left:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -246,25 +214,19 @@
   .lb-actions{display:flex; gap:8px; margin-top:12px}
   .lb-actions button{font-size:.85rem; padding:8px 12px}
 
-  footer{
-    margin-top:16px; font-size:.75rem; opacity:.6;
-    text-align:center;
-  }
+  footer{margin-top:16px; font-size:.75rem; opacity:.6; text-align:center}
 
   @media (max-width:480px){
     h1{font-size:1.8rem}
     .score-box{padding:6px 10px; min-width:60px}
     .score-box .value{font-size:1.1rem}
     button{padding:9px 10px; font-size:.85rem}
-    .board{padding:6px; gap:6px}
-    .tiles{inset:6px}
     .splash-logo{font-size:3rem}
   }
 </style>
 </head>
 <body>
 
-<!-- Splash Screen -->
 <div id="splash">
   <div class="splash-content">
     <div class="splash-logo">2048</div>
@@ -298,15 +260,12 @@
 
 <footer>Игрок: <span id="playerName">гость</span> · Режим: <span id="modeLabel">4×4</span></footer>
 
-<!-- Модалка настроек -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
     <button class="close-x" data-close="settingsModal">×</button>
     <h3>Настройки</h3>
-
     <label>Ваш логин</label>
     <input type="text" id="loginInput" maxlength="20" placeholder="Введите логин">
-
     <label>Размер поля</label>
     <select id="sizeSelect">
       <option value="3">3 × 3 (цель: 512)</option>
@@ -314,7 +273,6 @@
       <option value="5">5 × 5 (цель: 4096)</option>
       <option value="6">6 × 6 (цель: 8192)</option>
     </select>
-
     <label>Тема оформления</label>
     <div class="theme-grid" id="themeGrid">
       <div class="theme-btn" data-t="light">Светлая</div>
@@ -324,21 +282,16 @@
       <div class="theme-btn" data-t="sepia">Сепия</div>
       <div class="theme-btn" data-t="forest">Лес</div>
     </div>
-
     <label>Звук</label>
     <div class="volume-control">
       <span class="volume-icon" id="volumeIcon">🔊</span>
       <input type="range" id="volumeSlider" min="0" max="100" value="50">
       <span id="volumeValue">50%</span>
     </div>
-
-    <div class="row">
-      <button id="saveSettings">Сохранить</button>
-    </div>
+    <div class="row"><button id="saveSettings">Сохранить</button></div>
   </div>
 </div>
 
-<!-- Модалка рейтинга -->
 <div class="modal-bg" id="leaderModal">
   <div class="modal">
     <button class="close-x" data-close="leaderModal">×</button>
@@ -355,112 +308,61 @@
 
 <script>
 (() => {
-  // ===== Состояние =====
   const LS_KEY = 'game2048_v1';
   const LS_SETTINGS = 'game2048_settings_v1';
   const LS_LEADER = 'game2048_leader_v1';
-
   const TARGETS = {3:512, 4:2048, 5:4096, 6:8192};
 
-  let state = {
-    grid: [], size: 4, score: 0, best: 0,
-    history: [], won: false, over: false
-  };
-  let settings = {
-    theme: 'light', size: 4, login: '',
-    volume: 50, soundEnabled: true
-  };
+  let state = {grid:[], size:4, score:0, best:0, history:[], won:false, over:false};
+  let settings = {theme:'light', size:4, login:'', volume:50, soundEnabled:true};
 
-  // ===== Звуковая система =====
+  // ===== Звук =====
   let audioCtx = null;
   function initAudio(){
     if(!audioCtx){
-      try{
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }catch(e){
-        console.warn('Audio not supported');
-      }
+      try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ console.warn('Audio not supported'); }
     }
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   }
-  
   function playTone(freq, duration, type='sine'){
     if(!settings.soundEnabled || !audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    
     osc.type = type;
     osc.frequency.value = freq;
-    
     const vol = settings.volume / 100;
     gain.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
+    osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(audioCtx.currentTime);
     osc.stop(audioCtx.currentTime + duration);
   }
-  
-  function playMoveSound(){
-    playTone(220, 0.08, 'sine');
-  }
-  
+  function playMoveSound(){ playTone(220, 0.08, 'sine'); }
   function playMergeSound(value){
     const baseFreq = 300 + Math.log2(value) * 50;
     playTone(baseFreq, 0.15, 'triangle');
-    setTimeout(()=>playTone(baseFreq * 1.5, 0.1, 'sine'), 50);
+    setTimeout(()=>playTone(baseFreq*1.5, 0.1, 'sine'), 50);
   }
-  
   function playWinSound(){
-    [523, 659, 784, 1047].forEach((f, i)=>{
-      setTimeout(()=>playTone(f, 0.2, 'sine'), i * 100);
-    });
+    [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'sine'), i*100));
   }
-  
   function playLoseSound(){
-    [400, 350, 300, 250].forEach((f, i)=>{
-      setTimeout(()=>playTone(f, 0.2, 'sawtooth'), i * 150);
-    });
+    [400,350,300,250].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'sawtooth'), i*150));
   }
-  
-  function playClickSound(){
-    playTone(800, 0.05, 'square');
-  }
+  function playClickSound(){ playTone(800, 0.05, 'square'); }
 
-  // ===== Загрузка =====
-  function loadSettings(){
-    try{
-      const s = JSON.parse(localStorage.getItem(LS_SETTINGS));
-      if(s) settings = {...settings, ...s};
-    }catch(e){}
-  }
-  function saveSettings(){
-    localStorage.setItem(LS_SETTINGS, JSON.stringify(settings));
-  }
-  function loadGame(){
-    try{
-      const s = JSON.parse(localStorage.getItem(LS_KEY));
-      if(s && s.grid && s.grid.length){
-        state = {...state, ...s};
-        state.history = s.history || [];
-      }
-    }catch(e){}
-  }
-  function saveGame(){
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-  }
-  function loadLeader(){
-    try{return JSON.parse(localStorage.getItem(LS_LEADER)) || []}catch(e){return []}
-  }
-  function saveLeader(list){
-    localStorage.setItem(LS_LEADER, JSON.stringify(list));
-  }
+  // ===== Хранение =====
+  function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(LS_SETTINGS)); if(s) settings={...settings,...s}; }catch(e){} }
+  function saveSettings(){ localStorage.setItem(LS_SETTINGS, JSON.stringify(settings)); }
+  function loadGame(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s && s.grid && s.grid.length){ state={...state,...s}; state.history=s.history||[]; } }catch(e){} }
+  function saveGame(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  function loadLeader(){ try{return JSON.parse(localStorage.getItem(LS_LEADER))||[]}catch(e){return[]} }
+  function saveLeader(list){ localStorage.setItem(LS_LEADER, JSON.stringify(list)); }
 
-  // ===== Игровая логика =====
-  function emptyGrid(n){return Array.from({length:n},()=>Array(n).fill(0))}
-  function clone(g){return g.map(r=>r.slice())}
-
+  // ===== Логика =====
+  function emptyGrid(n){ return Array.from({length:n},()=>Array(n).fill(0)); }
+  function clone(g){ return g.map(r=>r.slice()); }
   function emptyCells(){
     const cells=[];
     for(let r=0;r<state.size;r++)
@@ -510,8 +412,9 @@
     } else if(dir==='right'){
       for(let r=0;r<n;r++){
         const res = slideRow(state.grid[r].slice().reverse());
-        state.grid[r] = res.row.reverse(); gained += res.gained;
-        mergedValues.push(...res.mergedPositions.map(p=>({r,c:n-1-p,v:res.row.reverse()[p]})));
+        const row = res.row.reverse();
+        state.grid[r] = row; gained += res.gained;
+        mergedValues.push(...res.mergedPositions.map(p=>({r,c:n-1-p,v:row[p]})));
       }
     } else if(dir==='up'){
       for(let c=0;c<n;c++){
@@ -535,43 +438,35 @@
     const changed = JSON.stringify(before)!==JSON.stringify(state.grid);
     if(!changed) return false;
 
-    // Сохраняем историю для undo (макс 20)
     state.history.push({grid:before, score:state.score});
     if(state.history.length>20) state.history.shift();
 
     state.score += gained;
     if(state.score>state.best) state.best = state.score;
-    
-    const newTile = spawnTile();
-    
-    // Звуки
+    spawnTile();
+
     playMoveSound();
     if(mergedValues.length>0){
-      setTimeout(()=>{
-        mergedValues.forEach(m=>playMergeSound(m.v));
-      }, 100);
+      setTimeout(()=>{ mergedValues.forEach(m=>playMergeSound(m.v)); }, 100);
     }
 
-    // Проверка победы
     const target = TARGETS[state.size];
     if(!state.won){
       for(let r=0;r<n;r++)
         for(let c=0;c<n;c++)
-          if(state.grid[r][c]>=target){ 
-            state.won=true; 
+          if(state.grid[r][c]>=target){
+            state.won=true;
             playWinSound();
-            showOverlay('Победа! 🎉','Продолжить'); 
-            return true; 
+            showOverlay('Победа! 🎉','Продолжить');
+            return true;
           }
     }
-    // Проверка проигрыша
-    if(isGameOver()){ 
-      state.over=true; 
+    if(isGameOver()){
+      state.over=true;
       playLoseSound();
-      showOverlay('Игра окончена','Новая игра'); 
-      saveScore(); 
+      showOverlay('Игра окончена','Новая игра');
+      saveScore();
     }
-
     return true;
   }
 
@@ -612,7 +507,7 @@
     saveGame();
   }
 
-  // ===== Рендер =====
+  // ===== Рендер (ИСПРАВЛЕННЫЙ) =====
   const boardEl = document.getElementById('board');
   const tilesEl = document.getElementById('tiles');
   const scoreEl = document.getElementById('score');
@@ -622,8 +517,14 @@
 
   function render(){
     const n = state.size;
-    boardEl.style.gridTemplateColumns = `repeat(${n},1fr)`;
-    boardEl.style.gridTemplateRows = `repeat(${n},1fr)`;
+    const gap = window.innerWidth <= 480 ? 6 : 8;
+    const padding = window.innerWidth <= 480 ? 6 : 8;
+
+    boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+    boardEl.style.padding = padding + 'px';
+    boardEl.style.gap = gap + 'px';
+
     boardEl.innerHTML = '';
     for(let i=0;i<n*n;i++){
       const d = document.createElement('div');
@@ -631,26 +532,34 @@
       boardEl.appendChild(d);
     }
 
+    // Вычисляем размеры в пикселях
+    const boardRect = boardEl.getBoundingClientRect();
+    const containerSize = boardRect.width - padding * 2;
+    const cellSize = (containerSize - gap * (n - 1)) / n;
+
+    tilesEl.style.left = padding + 'px';
+    tilesEl.style.top = padding + 'px';
+    tilesEl.style.width = containerSize + 'px';
+    tilesEl.style.height = containerSize + 'px';
     tilesEl.innerHTML = '';
-    const gap = window.innerWidth<=480 ? 6 : 8;
+
     for(let r=0;r<n;r++){
       for(let c=0;c<n;c++){
         const v = state.grid[r][c];
         if(!v) continue;
         const t = document.createElement('div');
-        const pct = 100/n;
         t.className = 'tile' + tileClass(v);
         t.textContent = v;
-        t.style.width = `calc(${pct}% - ${gap*(n-1)/n}px)`;
-        t.style.height = `calc(${pct}% - ${gap*(n-1)/n}px)`;
-        t.style.transform = `translate(${c*(100/n)}%, ${r*(100/n)}%)`;
-        t.style.left = `calc(${c*gap/n}px)`;
-        t.style.top = `calc(${r*gap/n}px)`;
-        const base = window.innerWidth<=480 ? 28 : 40;
-        t.style.fontSize = base + 'px';
+        t.style.width = cellSize + 'px';
+        t.style.height = cellSize + 'px';
+        t.style.left = (c * (cellSize + gap)) + 'px';
+        t.style.top = (r * (cellSize + gap)) + 'px';
+        const fontSize = Math.max(14, Math.min(cellSize * 0.45, 48));
+        t.style.fontSize = fontSize + 'px';
         tilesEl.appendChild(t);
       }
     }
+
     scoreEl.textContent = state.score;
     bestEl.textContent = state.best;
     modeEl.textContent = `${n}×${n}`;
@@ -658,7 +567,7 @@
   }
 
   function tileClass(v){
-    if(v<=4096) return ' t'+v;
+    if(v<=8192) return ' t'+v;
     return ' tsuper';
   }
 
@@ -671,7 +580,7 @@
     overlayBtn.textContent = btn;
     overlayEl.classList.add('show');
   }
-  function hideOverlay(){overlayEl.classList.remove('show')}
+  function hideOverlay(){ overlayEl.classList.remove('show'); }
   overlayBtn.onclick = () => {
     playClickSound();
     if(state.won && !state.over){ hideOverlay(); return; }
@@ -681,19 +590,14 @@
   // ===== Рейтинг =====
   function saveScore(){
     const list = loadLeader();
-    list.push({
-      name: settings.login || 'гость',
-      score: state.score,
-      size: state.size,
-      date: Date.now()
-    });
+    list.push({name:settings.login||'гость', score:state.score, size:state.size, date:Date.now()});
     list.sort((a,b)=>b.score-a.score);
     saveLeader(list.slice(0,50));
   }
   function renderLeader(){
     const list = loadLeader();
     const el = document.getElementById('leaderboard');
-    if(!list.length){ el.innerHTML = '<div class="lb-empty">Пока нет результатов</div>'; return; }
+    if(!list.length){ el.innerHTML='<div class="lb-empty">Пока нет результатов</div>'; return; }
     el.innerHTML = list.map((x,i)=>`
       <div class="lb-row">
         <span class="rank">${i+1}</span>
@@ -705,7 +609,6 @@
   }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-  // Экспорт/Импорт рейтинга
   function exportLeaderboard(){
     playClickSound();
     const list = loadLeader();
@@ -718,12 +621,10 @@
     a.click();
     URL.revokeObjectURL(url);
   }
-
   function importLeaderboard(){
     playClickSound();
     document.getElementById('importFile').click();
   }
-
   function handleImport(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -738,9 +639,7 @@
         saveLeader(merged.slice(0,50));
         renderLeader();
         alert(`Импортировано ${data.length} записей`);
-      }catch(err){
-        alert('Ошибка импорта: неверный формат файла');
-      }
+      }catch(err){ alert('Ошибка импорта: неверный формат файла'); }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -751,31 +650,20 @@
     const map = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
                  a:'left',d:'right',w:'up',s:'down'};
     const dir = map[e.key];
-    if(dir){ 
-      e.preventDefault(); 
-      initAudio();
-      if(move(dir)){ render(); saveGame(); } 
-    }
+    if(dir){ e.preventDefault(); initAudio(); if(move(dir)){ render(); saveGame(); } }
     if(e.key==='z' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
   });
 
-  // Свайпы
   let tx=0, ty=0;
-  document.addEventListener('touchstart', e=>{
-    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
-    initAudio();
-  }, {passive:true});
+  document.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; initAudio(); }, {passive:true});
   document.addEventListener('touchend', e=>{
     const dx = e.changedTouches[0].clientX - tx;
     const dy = e.changedTouches[0].clientY - ty;
     if(Math.abs(dx)<30 && Math.abs(dy)<30) return;
-    let dir;
-    if(Math.abs(dx)>Math.abs(dy)) dir = dx>0?'right':'left';
-    else dir = dy>0?'down':'up';
+    const dir = Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
     if(move(dir)){ render(); saveGame(); }
   });
 
-  // Кнопки
   document.getElementById('btnNew').onclick = ()=>{
     initAudio();
     if(state.score>0 && !confirm('Начать новую игру?')) return;
@@ -783,8 +671,7 @@
   };
   document.getElementById('btnUndo').onclick = undo;
   document.getElementById('btnSettings').onclick = ()=>{
-    initAudio();
-    playClickSound();
+    initAudio(); playClickSound();
     document.getElementById('loginInput').value = settings.login;
     document.getElementById('sizeSelect').value = settings.size;
     document.getElementById('volumeSlider').value = settings.volume;
@@ -796,8 +683,7 @@
     document.getElementById('settingsModal').classList.add('show');
   };
   document.getElementById('btnLeader').onclick = ()=>{
-    initAudio();
-    playClickSound();
+    initAudio(); playClickSound();
     renderLeader();
     document.getElementById('leaderModal').classList.add('show');
   };
@@ -807,12 +693,10 @@
     const newSize = +document.getElementById('sizeSelect').value;
     const newVolume = +document.getElementById('volumeSlider').value;
     const themeChanged = settings.theme !== currentSelectedTheme();
-    
     settings.login = newLogin;
     settings.size = newSize;
     settings.volume = newVolume;
     settings.soundEnabled = newVolume > 0;
-    
     if(themeChanged) applyTheme(currentSelectedTheme());
     saveSettings();
     if(newSize !== state.size) newGame();
@@ -824,16 +708,12 @@
   document.getElementById('importFile').onchange = handleImport;
   document.getElementById('clearLeader').onclick = ()=>{
     playClickSound();
-    if(confirm('Очистить весь рейтинг?')){
-      saveLeader([]); renderLeader();
-    }
+    if(confirm('Очистить весь рейтинг?')){ saveLeader([]); renderLeader(); }
   };
-  
-  // Громкость
+
   const volumeSlider = document.getElementById('volumeSlider');
   const volumeValue = document.getElementById('volumeValue');
   const volumeIcon = document.getElementById('volumeIcon');
-  
   volumeSlider.oninput = (e)=>{
     const val = +e.target.value;
     volumeValue.textContent = val + '%';
@@ -842,14 +722,13 @@
     settings.soundEnabled = val > 0;
     if(val > 0) playClickSound();
   };
-  
   function updateVolumeIcon(val){
-    if(val === 0) volumeIcon.textContent = '🔇';
-    else if(val < 33) volumeIcon.textContent = '🔈';
-    else if(val < 66) volumeIcon.textContent = '🔉';
-    else volumeIcon.textContent = '🔊';
+    if(val===0) volumeIcon.textContent='🔇';
+    else if(val<33) volumeIcon.textContent='🔈';
+    else if(val<66) volumeIcon.textContent='🔉';
+    else volumeIcon.textContent='🔊';
   }
-  
+
   function currentSelectedTheme(){
     const el = document.querySelector('.theme-btn.active');
     return el ? el.dataset.t : settings.theme;
@@ -862,22 +741,13 @@
     };
   });
 
-  // Закрытие модалок
   document.querySelectorAll('[data-close]').forEach(b=>{
-    b.onclick = ()=>{
-      playClickSound();
-      closeModal(b.dataset.close);
-    };
+    b.onclick = ()=>{ playClickSound(); closeModal(b.dataset.close); };
   });
   document.querySelectorAll('.modal-bg').forEach(m=>{
-    m.onclick = e=>{ 
-      if(e.target===m){
-        playClickSound();
-        m.classList.remove('show');
-      }
-    };
+    m.onclick = e=>{ if(e.target===m){ playClickSound(); m.classList.remove('show'); } };
   });
-  function closeModal(id){document.getElementById(id).classList.remove('show')}
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
   function applyTheme(t){
     settings.theme = t;
@@ -885,13 +755,11 @@
     else document.documentElement.setAttribute('data-theme', t);
   }
 
-  // ===== Сохранение при выходе =====
   window.addEventListener('beforeunload', saveGame);
   document.addEventListener('visibilitychange', ()=>{
     if(document.visibilityState==='hidden') saveGame();
   });
 
-  // ===== Инициализация =====
   loadSettings();
   applyTheme(settings.theme);
   loadGame();
@@ -902,22 +770,19 @@
     render();
   }
 
-  // Скрыть splash screen
   setTimeout(()=>{
     document.getElementById('splash').classList.add('hide');
-    setTimeout(()=>{
-      document.getElementById('splash').style.display = 'none';
-    }, 500);
+    setTimeout(()=>{ document.getElementById('splash').style.display='none'; }, 500);
   }, 800);
 
-  // Рерender при ресайзе
-  window.addEventListener('resize', render);
+  let resizeTimer;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 100);
+  });
 
-  // ===== Service Worker (опционально) =====
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(err=>{
-      console.log('SW registration failed:', err);
-    });
+    navigator.serviceWorker.register('sw.js').catch(err=>{ console.log('SW failed:', err); });
   }
 })();
 </script>
