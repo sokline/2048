@@ -1,38 +1,97 @@
-const CACHE = 'game2048-v3';
-const ASSETS = ['./', './index.html', './manifest.json'];
+const CACHE_NAME = 'game2048-v5';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
 
-self.addEventListener('install', e=>{
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c=>c.addAll(ASSETS))
-      .catch(err=>console.log('Cache failed:', err))
+// ===== INSTALL: кэшируем всё при первой установке =====
+self.addEventListener('install', (event) => {
+  console.log('[SW] Установка, кэширование ресурсов');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => {
+        console.log('[SW] Все ресурсы закэшированы');
+        return self.skipWaiting(); // активируем новый SW сразу
+      })
+      .catch((err) => console.error('[SW] Ошибка кэширования:', err))
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', e=>{
-  e.waitUntil(
-    caches.keys().then(keys=>Promise.all(
-      keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
-    ))
+// ===== ACTIVATE: удаляем старые кэши =====
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Активация');
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => {
+            console.log('[SW] Удаление старого кэша:', name);
+            return caches.delete(name);
+          })
+      );
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', e=>{
-  e.respondWith(
-    caches.match(e.request).then(r=>{
-      return r || fetch(e.request).then(resp=>{
-        if(resp.ok && e.request.method==='GET'){
-          const copy = resp.clone();
-          caches.open(CACHE).then(c=>c.put(e.request, copy));
+// ===== FETCH: cache-first с фоновым обновлением =====
+self.addEventListener('fetch', (event) => {
+  // Игнорируем не-GET запросы
+  if (event.request.method !== 'GET') return;
+
+  // Игнорируем запросы к другим доменам (например, аналитика)
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
+  event.respondWith(
+    caches.match(event.request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // Нашли в кэше — возвращаем сразу (мгновенная загрузка)
+          // И в фоне обновляем кэш свежей версией с сервера
+          event.waitUntil(
+            fetch(event.request)
+              .then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                  const responseToCache = networkResponse.clone();
+                  caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                  });
+                }
+              })
+              .catch(() => {
+                // Нет интернета — ничего не делаем, кэш уже есть
+              })
+          );
+          return cachedResponse;
         }
-        return resp;
-      }).catch(()=>{
-        if(e.request.mode === 'navigate'){
-          return caches.match('./index.html');
-        }
-      });
-    })
+
+        // Не нашли в кэше — грузим из сети и кэшируем
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (!networkResponse || networkResponse.status !== 200) {
+              return networkResponse;
+            }
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+            return networkResponse;
+          })
+          .catch(() => {
+            // Сеть недоступна и в кэше нет — для навигации показываем index
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+          });
+      })
   );
+});
+
+// ===== MESSAGE: ручной триггер обновления (опционально) =====
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
