@@ -1080,8 +1080,41 @@
     }, 150);
   });
 
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(err=>{ console.log('SW failed:', err); });
+    // ===== Service Worker — тихое фоновое обновление =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('[App] SW зарегистрирован:', registration.scope);
+
+          // Проверяем обновления при каждом запуске
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            console.log('[App] Найдена новая версия, установка в фоне...');
+
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // Новый SW установлен, но старый ещё контролирует страницу
+                // При следующем открытии подхватится новая версия
+                console.log('[App] Новая версия готова, применится при следующем запуске');
+              }
+            });
+          });
+
+          // Если SW уже обновился пока страница была открыта — активируем
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('[App] SW обновлён, перезагрузка...');
+            window.location.reload();
+          });
+        })
+        .catch((error) => {
+          console.log('[App] SW регистрация не удалась:', error);
+        });
+    });
+
+    // Индикаторы статуса сети (опционально, для отладки)
+    window.addEventListener('online', () => console.log('[App] Онлайн'));
+    window.addEventListener('offline', () => console.log('[App] Офлайн'));
   }
 })();
 </script>
